@@ -1,0 +1,3916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1A3A5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MEDIÇÃO FINAL">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<title>Maxibell — Sistema de Medição</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & VARIÁVEIS
+═══════════════════════════════════════════════ */
+:root {
+  --primary:    #0D6EFD;
+  --primary2:   #4F8CFF;
+  --bg:         #F7F9FC;
+  --card:       rgba(255,255,255,0.55);
+  --text:       #1D2939;
+  --muted:      #64748b;
+  --success:    #16A34A;
+  --warning:    #F59E0B;
+  --error:      #DC2626;
+  --error-dark: #7F1D1D;
+  --orange:     #EA580C;
+  --shadow:     0 2px 16px rgba(0,0,0,0.06);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.08);
+  --radius:     14px;
+  --radius-sm:  8px;
+  --input-blue: #EFF6FF;
+  --input-border-blue: #93C5FD;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+html,body{height:100%;overflow-x:hidden}
+body{
+  font-family:'Montserrat',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   BACKGROUND GRADIENTE SUAVE
+═══════════════════════════════════════════════ */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(13,110,253,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(79,140,255,0.06) 0%, transparent 55%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT PRINCIPAL
+═══════════════════════════════════════════════ */
+.app-wrapper{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER — FAIXA ELEGANTE
+═══════════════════════════════════════════════ */
+.app-header{
+  background:rgba(13,110,253,0.92);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  padding:11px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 1px 0 rgba(255,255,255,0.08), 0 4px 20px rgba(13,110,253,0.18);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.header-brand{display:flex;align-items:center;gap:10px}
+.header-logo{
+  width:32px;height:32px;
+  background:rgba(255,255,255,0.15);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+}
+.header-title{color:#fff}
+.header-title h1{font-size:0.88rem;font-weight:700;letter-spacing:0.5px}
+.header-title p{font-size:0.62rem;opacity:0.7;margin-top:1px;font-weight:500}
+.header-center{
+  position:absolute;left:50%;transform:translateX(-50%);
+  color:#fff;text-align:center;
+  pointer-events:none;
+}
+.header-center-proposta{
+  font-size:0.72rem;font-weight:700;opacity:0.95;letter-spacing:0.3px;
+}
+.header-center-meta{
+  font-size:0.58rem;opacity:0.6;font-weight:500;margin-top:1px;
+}
+.header-badge{
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:0.62rem;
+  font-weight:600;
+  letter-spacing:0.5px;
+}
+
+/* ═══════════════════════════════════════════════
+   CONTAINER
+═══════════════════════════════════════════════ */
+.container{
+  max-width:920px;
+  margin:0 auto;
+  padding:24px 16px 40px;
+  flex:1;
+}
+
+/* ═══════════════════════════════════════════════
+   GLASS CARD — GLASSMORPHISM LEVE
+═══════════════════════════════════════════════ */
+.glass-card{
+  background:rgba(255,255,255,0.55);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:var(--shadow-md);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:16px;
+}
+.glass-card.elevated{
+  box-shadow:0 8px 40px rgba(13,110,253,0.10), 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* ═══════════════════════════════════════════════
+   TELAS
+═══════════════════════════════════════════════ */
+.screen{display:none}
+.screen.active{
+  display:block;
+  animation:screenFade 0.25s ease;
+}
+@keyframes screenFade{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ═══════════════════════════════════════════════
+   TELA 1 — IMPORTAR OBRA
+═══════════════════════════════════════════════ */
+.import-hero{
+  text-align:center;
+  padding:28px 16px 20px;
+}
+.import-hero .logo-big{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,var(--primary),var(--primary2));
+  border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;
+  margin:0 auto 18px;
+  box-shadow:0 6px 20px rgba(13,110,253,0.25);
+}
+.import-hero h2{
+  font-size:1.3rem;font-weight:700;
+  color:var(--text);margin-bottom:6px;
+}
+.import-hero p{font-size:0.8rem;color:var(--muted);font-weight:500}
+
+.upload-zone{
+  border:2px dashed var(--input-border-blue);
+  border-radius:var(--radius);
+  padding:36px 24px;
+  text-align:center;
+  cursor:pointer;
+  background:var(--input-blue);
+  transition:all 0.2s ease;
+  position:relative;
+  overflow:hidden;
+}
+.upload-zone:hover,.upload-zone.drag{
+  background:#DBEAFE;
+  border-color:var(--primary);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(13,110,253,0.12);
+}
+.upload-zone input[type=file]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+}
+.upload-icon{font-size:2.6rem;margin-bottom:10px;display:block}
+.upload-zone h3{font-size:0.95rem;font-weight:700;color:var(--primary);margin-bottom:5px}
+.upload-zone p{font-size:0.75rem;color:var(--muted);font-weight:500}
+.btn-upload-label{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:14px;
+  padding:10px 24px;
+  background:linear-gradient(135deg,var(--primary),var(--primary2));
+  color:#fff;
+  border-radius:10px;
+  font-weight:700;
+  font-size:0.82rem;
+  box-shadow:0 3px 12px rgba(13,110,253,0.25);
+  transition:all 0.2s;
+  cursor:pointer;
+  border:none;
+  pointer-events:none;
+}
+
+/* ═══════════════════════════════════════════════
+   BOTÕES
+═══════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 22px;
+  border-radius:10px;
+  font-family:'Montserrat',sans-serif;
+  font-weight:600;
+  font-size:0.85rem;
+  cursor:pointer;
+  border:none;
+  transition:all 0.18s ease;
+  letter-spacing:0.2px;
+}
+.btn:active{transform:scale(0.97)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--primary2));
+  color:#fff;
+  box-shadow:0 3px 12px rgba(13,110,253,0.28);
+}
+.btn-primary:hover{
+  box-shadow:0 5px 18px rgba(13,110,253,0.38);
+  transform:translateY(-1px);
+}
+.btn-success{
+  background:linear-gradient(135deg,#16A34A,#22C55E);
+  color:#fff;
+  box-shadow:0 3px 12px rgba(22,163,74,0.28);
+}
+.btn-success:hover{
+  box-shadow:0 5px 18px rgba(22,163,74,0.38);
+  transform:translateY(-1px);
+}
+.btn-outline{
+  background:transparent;
+  color:var(--primary);
+  box-shadow:inset 0 0 0 1.5px var(--primary);
+}
+.btn-outline:hover{background:var(--input-blue)}
+.btn-danger{
+  background:linear-gradient(135deg,var(--error),#EF4444);
+  color:#fff;
+  box-shadow:0 3px 12px rgba(220,38,38,0.22);
+}
+.btn-ghost{
+  background:rgba(13,110,253,0.07);
+  color:var(--primary);
+}
+.btn-ghost:hover{background:rgba(13,110,253,0.12)}
+.btn-full{width:100%}
+.btn-lg{padding:14px 26px;font-size:0.95rem;border-radius:12px}
+
+/* ═══════════════════════════════════════════════
+   TELA 2 — RESUMO DA OBRA
+═══════════════════════════════════════════════ */
+.screen-title{
+  font-size:1rem;font-weight:700;
+  color:var(--text);
+  margin-bottom:3px;
+}
+.screen-subtitle{
+  font-size:0.75rem;color:var(--muted);font-weight:500;
+  margin-bottom:20px;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 16px;
+  margin-bottom:16px;
+}
+.info-item label{
+  display:block;
+  font-size:0.6rem;font-weight:700;
+  color:var(--primary);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+  margin-bottom:4px;
+}
+.info-item .value{
+  font-size:0.85rem;font-weight:600;
+  color:var(--text);
+  padding:2px 0;
+  min-height:28px;
+  display:flex;align-items:center;
+}
+.info-item.full{grid-column:1/-1}
+
+.field-editable{background:var(--input-blue)!important}
+.field-editable input,
+.field-editable select,
+.field-editable textarea{
+  background:transparent;
+  border:none;outline:none;
+  font-family:'Montserrat',sans-serif;
+  font-size:0.85rem;
+  font-weight:600;
+  color:var(--text);
+  width:100%;
+}
+
+.input-blue{
+  background:var(--input-blue);
+  border:1.5px solid var(--input-border-blue);
+  border-radius:9px;
+  padding:11px 13px;
+  font-family:'Montserrat',sans-serif;
+  font-size:0.85rem;
+  font-weight:600;
+  color:var(--text);
+  width:100%;
+  outline:none;
+  transition:border-color 0.18s,box-shadow 0.18s;
+  text-transform:uppercase;
+}
+.input-blue::placeholder{ text-transform:none; }
+.input-blue:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(13,110,253,0.10);
+}
+
+.input-label{
+  font-size:0.65rem;font-weight:700;
+  color:var(--primary);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+  margin-bottom:6px;
+  display:block;
+}
+
+/* ═══════════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════════ */
+.divider{
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(13,110,253,0.12),transparent);
+  margin:20px 0;
+}
+
+/* ═══════════════════════════════════════════════
+   CHIPS / BADGES
+═══════════════════════════════════════════════ */
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;
+  border-radius:20px;
+  font-size:0.65rem;font-weight:700;
+  letter-spacing:0.2px;
+}
+.chip-blue{background:#DBEAFE;color:#1D4ED8}
+.chip-gold{background:#FEF3C7;color:#92400E}
+.chip-green{background:#DCFCE7;color:#15803D}
+.chip-red{background:#FEE2E2;color:#991B1B}
+.chip-orange{background:#FEF3C7;color:#C2410C}
+.chip-gray{background:#F1F5F9;color:#475569}
+.chip-purple{background:#EDE9FE;color:#5B21B6}
+.chip-motor{background:#FEE2E2;color:#991B1B}
+
+/* ═══════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════════ */
+.toast-container{
+  position:fixed;
+  bottom:22px;right:14px;
+  z-index:9999;
+  display:flex;flex-direction:column;gap:7px;
+  max-width:300px;
+}
+.toast{
+  padding:12px 16px;
+  border-radius:10px;
+  font-size:0.78rem;font-weight:600;
+  color:#fff;
+  box-shadow:0 6px 20px rgba(0,0,0,0.12);
+  display:flex;align-items:center;gap:9px;
+  animation:toastIn 0.25s ease;
+  backdrop-filter:blur(10px);
+}
+.toast.ok{background:rgba(22,163,74,0.94)}
+.toast.erro{background:rgba(220,38,38,0.94)}
+.toast.aviso{background:rgba(234,88,12,0.94)}
+.toast.info{background:rgba(13,110,253,0.94)}
+@keyframes toastIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.45);
+  backdrop-filter:blur(4px);
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+.modal-overlay.active{display:flex}
+.modal-box{
+  background:#fff;
+  border-radius:var(--radius);
+  padding:26px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.16);
+  animation:modalIn 0.22s ease;
+}
+@keyframes modalIn{from{transform:scale(0.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:0.95rem;font-weight:700;margin-bottom:7px}
+.modal-desc{font-size:0.78rem;color:var(--muted);font-weight:500;margin-bottom:18px}
+.modal-actions{display:flex;gap:9px}
+
+/* ═══════════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════════ */
+.loading-overlay{
+  position:fixed;inset:0;
+  background:rgba(247,249,252,0.88);
+  backdrop-filter:blur(8px);
+  z-index:1000;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+}
+.loading-overlay.active{display:flex}
+.spinner{
+  width:44px;height:44px;
+  border:3px solid rgba(13,110,253,0.12);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:0.82rem;font-weight:600;color:var(--primary)}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVO
+═══════════════════════════════════════════════ */
+@media(max-width:600px){
+  .container{padding:14px 10px 28px}
+  .glass-card{padding:16px 14px}
+  .info-grid{grid-template-columns:1fr}
+  .app-header{padding:10px 14px}
+  .header-badge{display:none}
+  .header-center{display:none}
+}
+
+/* ═══════════════════════════════════════════════════════
+   PAINEL LATERAL — NAVEGAÇÃO INSPIRADA NO CHATGPT
+═══════════════════════════════════════════════════════ */
+#sideNav {
+  position: fixed;
+  top: 54px;
+  right: 0;
+  bottom: 0;
+  width: 220px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: -1px 0 0 rgba(0,0,0,0.06), -4px 0 20px rgba(0,0,0,0.04);
+  z-index: 90;
+  display: none;
+  flex-direction: column;
+  transition: transform 0.25s ease;
+}
+#sideNav.visible { display: flex; }
+
+.side-nav-header {
+  padding: 12px 12px 8px;
+  flex-shrink: 0;
+}
+.side-obra-info { margin-bottom: 8px; }
+.side-obra-nome {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-obra-progresso-txt {
+  font-size: 0.58rem;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+.side-progress-bar {
+  height: 2px;
+  background: #E2E8F0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.side-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary2));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.side-search { position: relative; }
+.side-search input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.5);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px 6px 26px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  transition: background 0.18s;
+}
+.side-search input:focus { background: rgba(255,255,255,0.85); }
+.side-search::before {
+  content: '🔍';
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  pointer-events: none;
+}
+
+.side-nav-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 6px 60px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13,110,253,0.12) transparent;
+}
+.side-nav-list::-webkit-scrollbar { width: 2px; }
+.side-nav-list::-webkit-scrollbar-thumb {
+  background: rgba(13,110,253,0.15);
+  border-radius: 2px;
+}
+
+/* Item de navegação — estilo ChatGPT */
+.side-esq-item {
+  padding: 7px 8px 7px 10px;
+  margin-bottom: 1px;
+  cursor: pointer;
+  border-radius: 6px;
+  background: transparent;
+  transition: background 0.14s ease;
+  position: relative;
+}
+.side-esq-item:hover { background: rgba(13,110,253,0.06); }
+.side-esq-item.ativo {
+  background: rgba(13,110,253,0.08);
+  border-left: 2px solid var(--primary);
+  padding-left: 8px;
+}
+.side-esq-codigo {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.side-esq-item.ativo .side-esq-codigo { color: var(--primary); }
+.side-esq-tipo {
+  font-size: 0.58rem;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+  line-height: 1.3;
+}
+.side-esq-item.ativo .side-esq-tipo { color: var(--primary); opacity: 0.75; }
+.side-esq-loc {
+  font-size: 0.55rem;
+  color: #94A3B8;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.side-esq-status {
+  position: absolute;
+  top: 7px; right: 7px;
+  font-size: 0.6rem;
+  opacity: 0.7;
+}
+.side-esq-item .side-tooltip {
+  display: none;
+  position: absolute;
+  left: -195px;
+  top: 0;
+  width: 185px;
+  background: #1E3A5F;
+  color: #fff;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  z-index: 999;
+  pointer-events: none;
+}
+.side-esq-item:hover .side-tooltip { display: block; }
+
+/* Toggle mobile */
+#btnSideNavToggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 95;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  padding: 10px 5px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  font-weight: 700;
+  writing-mode: vertical-rl;
+  letter-spacing: 1px;
+  box-shadow: -2px 0 10px rgba(13,110,253,0.25);
+  display: none;
+  transition: background 0.18s;
+}
+#btnSideNavToggle:hover { background: var(--primary2); }
+
+body.side-open .container {
+  padding-right: 252px;
+  transition: padding 0.25s ease;
+}
+
+body.side-open #sideNav { display: flex !important; }
+
+@media (max-width: 860px) {
+  body.side-open .container {
+    padding-right: 0 !important;
+  }
+  #sideNav {
+    width: 240px;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  #sideNav.mobile-open { transform: translateX(0); }
+  #btnSideNavToggle { display: block; }
+}
+@media (min-width: 861px) {
+  #btnSideNavToggle { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════
+   BOTÃO FLUTUANTE OBSERVAÇÃO — CIRCULAR DISCRETO
+═══════════════════════════════════════════════ */
+#btnObsRapida {
+  position: fixed;
+  bottom: 18px;
+  left: 14px;
+  z-index: 200;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--muted);
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s, box-shadow 0.18s, color 0.18s;
+}
+
+/* Botão observação geral da obra */
+#btnObsObra {
+  position: fixed;
+  bottom: 100px; /* acima do btnObsRapida */
+  right: 18px;
+  z-index: 900;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EA580C, #C2410C);
+  color: #fff;
+  font-size: 1.3rem;
+  border: none;
+  box-shadow: 0 4px 16px rgba(234,88,12,0.35);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+#btnObsObra.visible { display: flex; }
+#btnObsObra:hover { transform: scale(1.08); box-shadow: 0 6px 22px rgba(234,88,12,0.45); }
+@media(max-width:600px){ #btnObsObra { bottom: 95px; right: 14px; width: 42px; height: 42px; font-size: 1.1rem; } }
+#btnObsRapida:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 18px rgba(13,110,253,0.16);
+  color: var(--primary);
+}
+#btnObsRapida { display: none !important; }
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR GLOBAL
+═══════════════════════════════════════════════ */
+::-webkit-scrollbar{ width:4px }
+::-webkit-scrollbar-track{ background:transparent }
+::-webkit-scrollbar-thumb{ background:rgba(13,110,253,0.22);border-radius:2px }
+::selection{ background:rgba(13,110,253,0.15);color:var(--text) }
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid rgba(13,110,253,0.35);outline-offset:2px;
+}
+</style>
+</head>
+<body>
+<!-- BANNER INSTALAR APP -->
+<div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,#FFD600,#FFA800);padding:14px 20px;box-shadow:0 -4px 20px rgba(0,0,0,0.25);animation:slideUp 0.4s ease">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:600px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="icons/icon-192x192.png" style="width:44px;height:44px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-size:11pt;font-weight:800;color:#1A3A5C">MEDIÇÃO FINAL</div>
+        <div style="font-size:8pt;color:#5a4a00;font-weight:500">Toque para instalar no seu tablet</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="btnInstall" onclick="instalarApp()" style="background:#1A3A5C;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:'Montserrat',sans-serif;font-size:9pt;font-weight:800;cursor:pointer;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(0,0,0,0.2)">📲 INSTALAR</button>
+      <button onclick="document.getElementById('installBanner').style.display='none'" style="background:transparent;border:2px solid rgba(26,58,92,0.3);color:#1A3A5C;border-radius:8px;padding:10px 14px;font-family:'Montserrat',sans-serif;font-size:8pt;font-weight:700;cursor:pointer">✕</button>
+    </div>
+  </div>
+</div>
+<style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Processando arquivo...</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- BOTÃO FLUTUANTE OBSERVAÇÃO DA ESQUADRIA -->
+<button id="btnObsRapida" title="Observação da Esquadria" onclick="abrirObsRapida()">📝</button>
+
+<!-- BOTÃO FLUTUANTE OBSERVAÇÃO GERAL DA OBRA -->
+<button id="btnObsObra" title="Obs. Geral da Obra" onclick="abrirObsObra()">📋</button>
+
+<!-- MODAL OBSERVAÇÃO GERAL DA OBRA -->
+<div class="modal-overlay" id="modalObsObra">
+  <div class="modal-box">
+    <div class="modal-title">📋 Observação Geral da Obra</div>
+    <div class="modal-desc">Anotação rápida sobre a obra — salva no JSON exportado</div>
+    <div style="margin-bottom:14px">
+      <label class="input-label">Observação da Obra</label>
+      <textarea class="input-blue" id="inputObsObra"
+        rows="6" placeholder="Digite uma observação geral da obra…"
+        autocapitalize="characters"
+        oninput="this.value=this.value.toUpperCase()"
+        style="resize:vertical;font-family:inherit;font-size:0.85rem;font-weight:500;line-height:1.5;text-transform:uppercase"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="salvarObsObra()">💾 Salvar</button>
+      <button class="btn btn-outline" style="flex:1" onclick="fecharModal('modalObsObra')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OBSERVAÇÃO RÁPIDA -->
+<div class="modal-overlay" id="modalObsRapida">
+  <div class="modal-box">
+    <div class="modal-title">📝 Observação Rápida</div>
+    <div class="modal-desc" id="obsRapidaDesc">Esquadria em edição</div>
+    <div style="margin-bottom:14px">
+      <label class="input-label">Observação</label>
+      <textarea class="input-blue" id="inputObsRapida"
+        rows="5" placeholder="Digite sua observação…"
+        autocapitalize="characters"
+        oninput="this.value=this.value.toUpperCase()"
+        style="resize:vertical;font-family:inherit;font-size:0.85rem;font-weight:500;line-height:1.5;text-transform:uppercase"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="salvarObsRapida()">💾 Salvar</button>
+      <button class="btn btn-outline" style="flex:1" onclick="fecharModal('modalObsRapida')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SENHA ADMIN -->
+<div class="modal-overlay" id="modalSenha">
+  <div class="modal-box">
+    <div class="modal-title">🔒 Autenticação Administrativa</div>
+    <div class="modal-desc">Esta obra está finalizada. Informe a senha de administrador para reabrir.</div>
+    <div style="margin-bottom:14px">
+      <label class="input-label">Senha</label>
+      <input type="password" class="input-blue" id="inputSenhaAdmin" placeholder="••••••••">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="verificarSenhaAdmin()">Confirmar</button>
+      <button class="btn btn-outline" style="flex:1" onclick="fecharModal('modalSenha')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP WRAPPER -->
+<div class="app-wrapper">
+
+<!-- PAINEL LATERAL -->
+<div id="sideNav">
+  <div class="side-nav-header">
+    <div class="side-obra-info" id="sideObraInfo">
+      <div class="side-obra-nome" id="sideObraNome">—</div>
+      <div class="side-obra-progresso-txt" id="sideObraProgressoTxt">0 / 0 concluídas</div>
+      <div class="side-progress-bar">
+        <div class="side-progress-fill" id="sideProgressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="side-search">
+      <input type="text" id="sideSearchInput"
+        placeholder="Buscar código, local…"
+        oninput="filtrarSideNav(this.value)">
+    </div>
+  </div>
+  <div class="side-nav-list" id="sideNavList"></div>
+</div>
+
+<!-- TOGGLE MOBILE -->
+<button id="btnSideNavToggle" onclick="toggleSideNavMobile()">☰ ESQ.</button>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-brand">
+    <div class="header-logo">🪟</div>
+    <div class="header-title">
+      <h1>MAXIBELL</h1>
+      <p id="headerSubtitle">Sistema de Medição</p>
+    </div>
+  </div>
+  <div class="header-center" id="headerCenter" style="display:none">
+    <div class="header-center-proposta" id="headerCenterProposta"></div>
+    <div class="header-center-meta" id="headerCenterMeta"></div>
+  </div>
+  <div class="header-badge" id="headerBadge">v2.0</div>
+</header>
+
+<!-- CONTAINER PRINCIPAL -->
+<div class="container">
+
+  <!-- TELA 1 — IMPORTAR OBRA -->
+  <div class="screen active" id="screen-import">
+    <div class="glass-card elevated">
+      <div class="import-hero">
+        <div class="logo-big">📐</div>
+        <h2>Assistente de Medição</h2>
+        <p>Importe a proposta SmartCEM para iniciar</p>
+      </div>
+      <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".xls,.xlsx">
+        <span class="upload-icon">📊</span>
+        <h3>Arraste o arquivo XLS/XLSX aqui</h3>
+        <p>Proposta gerada pelo SmartCEM · Alumisoft</p>
+        <div class="btn-upload-label">📁 Selecionar Arquivo</div>
+      </div>
+      <div class="divider" style="margin-top:22px"></div>
+
+      <!-- BOTÃO INSTALAR NO TABLET -->
+      <div id="installBox" style="display:none;text-align:center;margin-bottom:18px;
+        background:linear-gradient(135deg,#FFD600,#FFA800);border-radius:12px;padding:16px 18px;
+        box-shadow:0 4px 16px rgba(255,168,0,0.25)">
+        <div style="font-size:1.4rem;margin-bottom:6px">📲</div>
+        <div style="font-size:0.88rem;font-weight:800;color:#1A3A5C;margin-bottom:4px">Instalar App no Tablet</div>
+        <div style="font-size:0.7rem;color:#5a4a00;font-weight:500;margin-bottom:12px">
+          Acesse offline direto da tela inicial
+        </div>
+        <button onclick="instalarApp()" style="
+          background:#1A3A5C;color:#fff;border:none;border-radius:10px;
+          padding:12px 28px;font-family:'Montserrat',sans-serif;font-size:0.85rem;
+          font-weight:800;cursor:pointer;letter-spacing:0.3px;
+          box-shadow:0 3px 12px rgba(26,58,92,0.3)">
+          📲 INSTALAR MEDIÇÃO FINAL
+        </button>
+      </div>
+
+      <div style="text-align:center">
+        <p style="font-size:0.72rem;color:#94a3b8;font-weight:500;margin-bottom:10px">
+          Ou carregue um backup salvo anteriormente
+        </p>
+        <label style="cursor:pointer">
+          <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importarJSON(this)">
+          <span class="btn btn-ghost" style="font-size:0.78rem;padding:9px 18px">
+            📋 Importar Backup JSON
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 2 — RESUMO DA OBRA -->
+  <div class="screen" id="screen-resumo">
+    <div class="glass-card elevated">
+      <div class="screen-title">Resumo da Obra</div>
+      <div class="screen-subtitle">Confirme os dados e informe o responsável pela medição</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Proposta</label>
+          <div class="value" id="resumo-proposta">—</div>
+        </div>
+        <div class="info-item">
+          <label>Data</label>
+          <div class="value" id="resumo-data">—</div>
+        </div>
+        <div class="info-item full">
+          <label>Cliente</label>
+          <div class="value" id="resumo-cliente">—</div>
+        </div>
+        <div class="info-item">
+          <label>Cidade</label>
+          <div class="value" id="resumo-cidade">—</div>
+        </div>
+        <div class="info-item">
+          <label>Total de Esquadrias</label>
+          <div class="value" id="resumo-total">—</div>
+        </div>
+        <div class="info-item full">
+          <label>Cor / Acabamento</label>
+          <div class="value" id="resumo-cor">—</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="margin-bottom:18px">
+        <label class="input-label">👤 Nome do Medidor <span style="color:var(--error)">*</span></label>
+        <input type="text" class="input-blue" id="nomeMedidor"
+          placeholder="Digite seu nome completo"
+          autocomplete="off"
+          autocapitalize="characters"
+          oninput="this.value=this.value.toUpperCase()">
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" onclick="iniciarMedicao()">
+        ✅ Iniciar Medição
+      </button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="voltarImport()">
+        ← Reimportar
+      </button>
+    </div>
+  </div>
+
+  <!-- WRAPPERS DAS DEMAIS TELAS -->
+  <div id="screen-lista-wrapper"></div>
+  <div id="screen-wizard-wrapper">
+    <div class="screen" id="screen-wizard">
+
+      <!-- CABEÇALHO DO WIZARD -->
+      <div class="glass-card" style="padding:14px 18px;margin-bottom:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.6rem;font-weight:700;color:var(--primary);
+              text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;opacity:0.8"
+              id="wizLabel">Localização</div>
+        <div style="font-size:1.4rem;font-weight:800;margin-bottom:2px;line-height:1.1" id="wizEsqCodigo">—</div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--primary);margin-bottom:5px" id="wizEsqTipo">—</div>
+            <div id="wizDescBanner" style="display:none;
+              background:rgba(13,110,253,0.06);
+              border-left:3px solid var(--primary);
+              border-radius:0 6px 6px 0;
+              padding:7px 11px;
+              margin-top:4px;
+              font-size:0.8rem;
+              color:#1E40AF;
+              line-height:1.5">
+              <span id="wizDescTexto" style="font-weight:700"></span><br>
+              <span id="wizMedidasProjeto" style="color:var(--muted);font-weight:600;font-size:0.78rem"></span>
+            </div>
+          </div>
+<!-- DEPOIS -->
+<div style="text-align:right;flex-shrink:0;margin-left:12px">
+  <div style="font-size:0.65rem;font-weight:600;color:var(--muted);margin-bottom:5px">
+    <span id="wizEtapaAtual">1</span> / <span id="wizEtapaTotal">1</span>
+  </div>
+  <div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">
+    <button class="btn btn-ghost"
+      style="font-size:0.68rem;padding:6px 10px;border-radius:8px"
+      onclick="abrirObsRapida()"
+      title="Observação Rápida">
+      📝 Observações
+    </button>
+    <button class="btn btn-success"
+      style="font-size:0.68rem;padding:6px 10px;border-radius:8px"
+      onclick="coletarStepAtual();autoSalvar();renderLista();showScreen('screen-lista')">
+      ← Voltar à Lista
+    </button>
+  </div>
+</div>
+
+        <div style="height:4px;background:#E2E8F0;border-radius:2px;overflow:hidden">
+          <div id="wizProgressBar"
+            style="height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));
+              border-radius:2px;transition:width 0.35s ease;width:0%"></div>
+        </div>
+      </div><!-- /cabeçalho info esq -->
+    </div><!-- /glass-card cabeçalho wizard -->
+
+      <!-- CONTEÚDO DO STEP -->
+      <div id="wizardContent"></div>
+
+
+      <!-- NAVEGAÇÃO -->
+      <div style="display:flex;gap:9px;margin-top:8px;position:sticky;bottom:14px;z-index:50;align-items:stretch">
+        <button class="btn btn-outline" id="btnWizAnterior"
+          style="flex:1;display:none;min-width:0"
+          onclick="wizAnterior()">
+          ← Anterior
+        </button>
+        <button class="btn btn-primary" id="btnWizProximo"
+          style="flex:2;min-width:0"
+          onclick="wizProximo()">
+          Próximo →
+        </button>
+      </div>
+
+    </div><!-- /glass-card wizard -->
+  </div><!-- /screen-wizard -->
+</div><!-- /screen-wizard-wrapper -->
+
+<div id="screen-finalizacao-wrapper"></div>
+
+</div><!-- /container -->
+</div><!-- /app-wrapper -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+═══════════════════════════════════════════════════════════ */
+const APP = {
+  obra: null,
+  esquadrias: [],
+  esquadriaAtual: -1,
+  wizard: {},
+  finalizada: false,
+  version: '2.0'
+};
+
+/* ===== CONFIGURAÇÃO DE TOLERÂNCIAS (ajustável) ===== */
+const TOLERANCIA_PROJETO_MM = 10; // trava: divergência (mm) entre medida do PROJETO (XLS) e medida do MEDIDOR
+/* ═══════════════════════════════════════════════════════════
+   UTILITÁRIOS
+═══════════════════════════════════════════════════════════ */
+function cel(v){ return (v===null||v===undefined)?'':String(v).trim(); }
+function nonEmpty(row){ return (row||[]).map(cel).filter(v=>v!==''); }
+function isCodigo(str){ return /^[A-Z]{1,2}-\d{2,3}$/i.test(str.trim()); }
+function temMotor(str){ return /motor/i.test(str); }
+
+function showToast(msg, tipo='ok', dur=3500){
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${tipo}`;
+  const icons = {ok:'✅',erro:'❌',aviso:'⚠️',info:'ℹ️'};
+  t.innerHTML = `<span>${icons[tipo]||'•'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.animation='toastIn 0.25s ease reverse'; setTimeout(()=>t.remove(),250); }, dur);
+}
+
+function setLoading(show, text='Processando...'){
+  const el = document.getElementById('loadingOverlay');
+  document.getElementById('loadingText').textContent = text;
+  el.classList.toggle('active', show);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el){ el.classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+}
+
+function fecharModal(id){ document.getElementById(id).classList.remove('active'); }
+function formatDate(){
+  return new Date().toLocaleDateString('pt-BR');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UPLOAD & DRAG-DROP
+═══════════════════════════════════════════════════════════ */
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault(); dropZone.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f) processarArquivo(f);
+});
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) processarArquivo(e.target.files[0]); });
+
+function processarArquivo(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(!['xls','xlsx'].includes(ext)){ showToast('Arquivo inválido. Use XLS ou XLSX.','erro'); return; }
+  setLoading(true, 'Lendo proposta SmartCEM...');
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(e.target.result,{type:'binary'});
+      const dados = lerSmartCEM(wb);
+      APP.obra = dados;
+      const listaDesmembrada = [];
+      let idxGlobal = 0;
+      dados.esquadrias.forEach(esq => {
+        const qtd = esq.qtd && esq.qtd > 1 ? esq.qtd : 1;
+        for (let n = 1; n <= qtd; n++) {
+          const sufixo = qtd > 1 ? `-${n}` : '';
+          listaDesmembrada.push({
+            ...esq,
+            id: idxGlobal++,
+            largura: Number(esq.largura) || 0,
+            altura:  Number(esq.altura)  || 0,
+            codigoOriginal: esq.codigo,
+            codigo: `${esq.codigo}${sufixo}`,
+            qtdTotal: qtd,
+            qtdIndice: n,
+            status: 'pendente',
+            localizacao: '',
+            contramarco: { H1:'', H2:'', H3:'', L1:'', L2:'', L3:'' },
+            reboco:      { H1:'', H2:'', H3:'', L1:'', L2:'', L3:'' },
+            instalacao: '',
+            complementos: {},
+            observacaoGeral: '',
+            croquiData: null,
+            fotos: [],
+            validacao: null
+          });
+        }
+      });
+      APP.esquadrias = listaDesmembrada;
+setLoading(false);
+      renderResumo(dados);
+      showScreen('screen-resumo');
+      // Abre o campo do medidor já focado (tenta subir o teclado no tablet)
+      setTimeout(()=>{ const nm=document.getElementById('nomeMedidor'); if(nm){ try{ nm.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} nm.focus(); nm.click(); } }, 350);
+      showToast(`${(APP.esquadrias&&APP.esquadrias.length)||dados.esquadrias.length} esquadria(s) carregada(s)!`, 'ok');
+    }catch(err){
+      setLoading(false);
+      showToast('Erro ao processar arquivo!','erro');
+      console.error(err);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXTRAÇÃO SMARTCEM
+═══════════════════════════════════════════════════════════ */
+function lerSmartCEM(workbook){
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+  return {
+    proposta:  extrairProposta(rows),
+    cliente:   extrairCliente(rows),
+    cidade:    extrairCidade(rows),
+    cor:       extrairCorGlobal(rows),
+    emitido:   extrairEmitido(rows),
+    total:     extrairTotal(rows),
+    validade:  extrairValidade(rows),
+    obs:       extrairObs(rows),
+    dataMedicao: formatDate(),
+    esquadrias: extrairEsquadrias(rows)
+  };
+}
+
+function extrairProposta(rows){
+  for(const row of rows){ for(const v of row){ const m = cel(v).match(/\b(PP|OP)-\d{3,6}\b/i); if(m) return m[0].toUpperCase(); } }
+  return '';
+}
+function extrairCliente(rows){
+  for(const row of rows){ for(let i=0;i<row.length;i++){ const v=cel(row[i]); if(/^cliente:\s*/i.test(v)){ const pr=v.replace(/^cliente:\s*/i,'').trim(); if(pr&&!/^CPF/i.test(pr)) return pr; for(let j=i+1;j<row.length;j++){ const nxt=cel(row[j]); if(nxt&&!/^CPF/i.test(nxt)) return nxt; } } } }
+  return '';
+}
+function extrairCidade(rows){
+  for(const row of rows){ const ne=nonEmpty(row); if(ne.length===1){ const v=ne[0]; if(v.length>=3&&v.length<=50&&v===v.toUpperCase()&&/^[A-ZÀ-Ú\s\-]+$/.test(v)&&!/PP-|OP-|\d{4}|EMITIDO|MAXIBELL|SMARTCEM|PRAZO|WWW\./i.test(v)) return v; } for(let i=0;i<row.length;i++){ if(/^cidade:\s*/i.test(cel(row[i]))){ const pr=cel(row[i]).replace(/^cidade:\s*/i,'').trim(); if(pr&&pr!=='/'&&pr.length>1) return pr; for(let j=i+1;j<row.length;j++){ const nxt=cel(row[j]); if(nxt&&nxt!=='/') return nxt; } } } }
+  return '';
+}
+function extrairEmitido(rows){ for(const row of rows){ for(const v of row){ if(/emitido por/i.test(cel(v))) return cel(v); } } return ''; }
+function extrairCorGlobal(rows){ for(const row of rows){ for(let i=0;i<row.length;i++){ if(/^acabamento:/i.test(cel(row[i]))){ const pr=cel(row[i]).replace(/^acabamento:\s*/i,'').trim(); if(pr&&pr.length>3) return pr; for(let j=i+1;j<row.length;j++){ const nxt=cel(row[j]); if(nxt&&nxt.length>3) return nxt; } } } } return ''; }
+function extrairTotal(rows){ for(const row of rows){ const linha=row.map(cel).join(' '); if(/total\s+or[çc]/i.test(linha)){ for(const v of row){ const cv=cel(v); if(/R\$/.test(cv)&&cv.includes(',')) return cv; } } } return ''; }
+function extrairValidade(rows){ for(const row of rows){ const ne=nonEmpty(row); const idx=ne.findIndex(v=>/validade/i.test(v)); if(idx>=0&&ne[idx+1]) return ne[idx+1]; } return ''; }
+function extrairObs(rows){ for(let i=0;i<rows.length;i++){ if(/observa[çc]/i.test(rows[i].map(cel).join(' '))){ for(let j=i+1;j<Math.min(i+8,rows.length);j++){ for(const v of rows[j]){ if(cel(v).length>40) return cel(v); } } } } return ''; }
+function isGrupo(ne){ if(ne.length!==1) return false; const u=ne[0].toUpperCase(); const keys=['FACHADA','JANELA DE CORRER INTEGRADA','JANELA INTEGRADA','JANELA DE CORRER','JANELA','PORTA DE CORRER INTEGRADA','PORTA DE CORRER','PORTA DE GIRO','PORTA PIVOTANTE','PIVOTANTE','PORTA INTEGRADA','PORTA','MAXIM-AR','MAXI-AR','MAXI AR','GUARDA CORPO','PORTÃO','PORTAO','BOX','FIXO','PAINEL','QUADRO FIXO','BASCULANTE','GUILHOTINA','DOBRÁVEL']; return keys.some(p=>u.includes(p)); }
+function extrairAcabamentoDeLinha(row){ for(let i=0;i<row.length;i++){ const v=cel(row[i]); if(/^acabamento:/i.test(v)){ const pr=v.replace(/^acabamento:\s*/i,'').trim(); if(pr&&pr.length>3) return pr; for(let j=i+1;j<row.length;j++){ const nxt=cel(row[j]); if(nxt&&nxt.length>3&&!/^localiza/i.test(nxt)) return nxt; } } } return null; }
+function extrairVidrosDeLinha(row){ for(let i=0;i<row.length;i++){ const v=cel(row[i]); if(/^sem vidro/i.test(v)) return 'Sem Vidros'; if(/^vidros?:/i.test(v)){ const pr=v.replace(/^vidros?:\s*/i,'').trim(); if(pr&&pr.length>3) return pr; for(let j=i+1;j<row.length;j++){ const nxt=cel(row[j]); if(nxt&&nxt.length>3) return nxt; } } } return null; }
+function extrairEsquadrias(rows){ const lista=[]; const vistos=new Set(); let grupoAtual='',acabAtual='',vidrosAtual=''; for(let i=0;i<rows.length;i++){ const row=rows[i]; const ne=nonEmpty(row); if(!ne.length) continue; if(isGrupo(ne)){ grupoAtual=ne[0]; acabAtual=''; vidrosAtual=''; continue; } const acab=extrairAcabamentoDeLinha(row); if(acab){ acabAtual=acab; continue; } const vid=extrairVidrosDeLinha(row); if(vid){ vidrosAtual=vid; continue; } let codigoIdx=-1; for(let c=0;c<row.length;c++){ if(isCodigo(cel(row[c]))){ codigoIdx=c; break; } } if(codigoIdx===-1) continue; const codigo=cel(row[codigoIdx]).toUpperCase(); if(vistos.has(codigo)) continue; vistos.add(codigo); const seg=[]; for(let c=codigoIdx;c<row.length;c++){ const v=cel(row[c]); if(v) seg.push(v); } const qtd=seg[1]?(parseInt(seg[1])||1):1; const largura=seg[2]?(parseInt(seg[2])||0):0; const altura=seg[3]?(parseInt(seg[3])||0):0; const linhaCom=seg[4]||''; let valorUn='',valorTotal=''; const comMoeda=seg.filter(v=>v.includes('R$')||v.includes(',')); if(comMoeda.length>=2){ valorUn=comMoeda[comMoeda.length-2]; valorTotal=comMoeda[comMoeda.length-1]; } else if(comMoeda.length===1){ valorUn=comMoeda[0]; } lista.push({ codigo, descricao:grupoAtual, acabamento:acabAtual, vidros:vidrosAtual, qtd, largura, altura, linha:linhaCom, motor:temMotor(grupoAtual), valorUn, valorTotal }); } return lista; }
+
+/* ═══════════════════════════════════════════════════════════
+   TELA 2 — RESUMO
+═══════════════════════════════════════════════════════════ */
+function renderResumo(d){
+  document.getElementById('resumo-proposta').textContent = d.proposta || '—';
+  document.getElementById('resumo-data').textContent     = d.dataMedicao || formatDate();
+  document.getElementById('resumo-cliente').textContent  = d.cliente || '—';
+  document.getElementById('resumo-cidade').textContent   = d.cidade || '—';
+  document.getElementById('resumo-total').textContent    = `${(APP.esquadrias&&APP.esquadrias.length)||d.esquadrias.length} esquadria(s)`;
+  document.getElementById('resumo-cor').textContent      = d.cor || '—';
+  document.getElementById('headerSubtitle').textContent  = d.proposta ? `${d.proposta} · ${d.cliente||''}` : 'Sistema de Medição';
+}
+
+function voltarImport(){
+  showScreen('screen-import');
+  APP.obra=null; APP.esquadrias=[];
+  document.getElementById('nomeMedidor').value='';
+}
+
+function iniciarMedicao(){
+  const nome = document.getElementById('nomeMedidor').value.trim();
+  if(!nome){ showToast('Informe o nome do medidor!','aviso'); return; }
+  APP.obra.medidor = nome;
+  APP.obra.dataMedicao = formatDate();
+  document.getElementById('headerBadge').textContent = nome.split(' ')[0];
+  // Atualiza header central
+  const hc = document.getElementById('headerCenter');
+  if(hc){
+    hc.style.display='block';
+    document.getElementById('headerCenterProposta').textContent =
+      `${APP.obra.proposta||'Obra'} • ${APP.obra.cliente||''}`;
+    document.getElementById('headerCenterMeta').textContent =
+      `${APP.esquadrias.length} esquadrias`;
+  }
+  showScreen('screen-lista');
+  renderLista();
+}
+
+function importarJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      APP.obra = data;
+      // Normalizar campos de esquadrias vindas do backup JSON
+      APP.esquadrias = (data.esquadrias || []).map(esq => ({
+        ...esq,
+        // Dimensões do projeto
+        largura:      esq.largura      || esq.larguraProjeto || 0,
+        altura:       esq.altura       || esq.alturaProjeto  || 0,
+        qtd:          esq.qtd          || esq.qtdTotal       || 1,
+        // Medidas: o JSON exporta dentro de esq.medidas.contramarco / esq.medidas.reboco
+        contramarco:  esq.contramarco  || esq.medidas?.contramarco || {H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+        reboco:       esq.reboco       || esq.medidas?.reboco       || {H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+        // Complementos: o JSON exporta como camposComplementares
+        complementos: esq.complementos || esq.camposComplementares  || {},
+        // Croqui: o JSON exporta como croqui (não croquiData)
+        croquiData:   esq.croquiData   || esq.croqui || null,
+      }));
+      APP.finalizada = false;
+      renderResumo(APP.obra);
+      showScreen('screen-resumo');
+      document.getElementById('nomeMedidor').value = data.medidor || '';
+      showToast('Backup carregado com sucesso!','ok');
+    }catch(err){ showToast('Erro ao importar JSON!','erro'); }
+  };
+  reader.readAsText(file);
+}
+
+function verificarSenhaAdmin(){
+  const senha = document.getElementById('inputSenhaAdmin').value;
+  if(senha === 'maxibell2024'){
+    APP.finalizada = false;
+    fecharModal('modalSenha');
+    renderResumo(APP.obra);
+    showScreen('screen-resumo');
+    document.getElementById('nomeMedidor').value = APP.obra.medidor || '';
+    showToast('Obra reaberta com sucesso!','ok');
+  } else { showToast('Senha incorreta!','erro'); }
+}
+
+function renderLista(){ /* PARTE 2 */ }
+function abrirWizard(idx){ /* PARTE 3 */ }
+function calcularValidacao(esq){ /* PARTE 4 */ return {}; }
+function gerarPDF(){ /* PARTE 5 */ }
+function gerarJSON(){ /* PARTE 6 */ }
+</script>
+<style>
+/* ── TELA LISTA ─────────────────────────────── */
+#screen-lista{ display:none }
+#screen-lista.active{ display:block }
+
+.lista-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;flex-wrap:wrap;gap:8px;
+}
+.lista-titulo-bloco{}
+.screen-title{ font-size:1rem;font-weight:700;color:var(--text);margin-bottom:2px }
+.screen-subtitle{ font-size:0.72rem;color:var(--muted);font-weight:500 }
+
+/* Stats — números flutuando sem caixas pesadas */
+.lista-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;
+  margin-bottom:20px;
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(10px);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.stat-card{
+  padding:14px 10px;
+  text-align:center;
+  position:relative;
+}
+.stat-card+.stat-card::before{
+  content:'';
+  position:absolute;left:0;top:20%;bottom:20%;
+  width:1px;background:rgba(0,0,0,0.06);
+}
+.stat-card .stat-num{
+  font-size:1.6rem;font-weight:700;
+  display:block;margin-bottom:1px;
+  line-height:1;
+}
+.stat-card .stat-label{
+  font-size:0.58rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.4px;
+  color:var(--muted);
+}
+.stat-card.pendente .stat-num{ color:#94A3B8 }
+.stat-card.andamento .stat-num{ color:var(--primary) }
+.stat-card.concluida .stat-num{ color:var(--success) }
+
+/* Cards de esquadria — sem caixas dentro de caixas */
+.esq-card{
+  background:rgba(255,255,255,0.52);
+  backdrop-filter:blur(10px);
+  border-radius:12px;
+  padding:16px 18px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:transform 0.18s ease, box-shadow 0.18s ease, background 0.18s;
+  box-shadow:0 1px 8px rgba(0,0,0,0.05);
+  display:flex;align-items:center;gap:14px;
+  position:relative;
+  overflow:hidden;
+}
+.esq-card::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;
+  width:3px;
+  border-radius:3px 0 0 3px;
+  transition:background 0.18s;
+}
+.esq-card.pendente::before{ background:#CBD5E1 }
+.esq-card.andamento::before{ background:var(--primary) }
+.esq-card.concluida::before{ background:var(--success) }
+.esq-card:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 24px rgba(13,110,253,0.10);
+  background:rgba(255,255,255,0.72);
+}
+.esq-card:active{ transform:scale(0.99) }
+
+.esq-status-icon{
+  width:40px;height:40px;min-width:40px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;
+  flex-shrink:0;
+  background:rgba(0,0,0,0.03);
+}
+
+.esq-info{ flex:1;min-width:0 }
+.esq-codigo{
+  font-size:0.9rem;font-weight:700;
+  color:var(--text);margin-bottom:1px;
+}
+.esq-tipo{
+  font-size:0.68rem;font-weight:600;
+  color:var(--primary);margin-bottom:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.esq-desc-inline{
+  background:transparent;
+  border-left:2px solid rgba(13,110,253,0.25);
+  padding:3px 8px;
+  margin:3px 0 6px;
+  font-size:0.65rem;
+  color:#334155;
+  font-weight:500;
+  line-height:1.4;
+}
+.esq-meta{
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+}
+.esq-arrow{
+  font-size:1rem;color:#CBD5E1;flex-shrink:0;
+  transition:color 0.18s;
+}
+.esq-card:hover .esq-arrow{ color:var(--primary) }
+.esq-card.concluida .esq-arrow{ color:var(--success) }
+
+.progress-mini{
+  height:2px;background:#F1F5F9;border-radius:2px;margin-top:6px;overflow:hidden;
+}
+.progress-mini-fill{ height:100%;border-radius:2px;transition:width 0.35s ease; }
+.pendente  .progress-mini-fill{ width:0%;background:#CBD5E1 }
+.andamento .progress-mini-fill{ width:50%;background:var(--primary) }
+.concluida .progress-mini-fill{ width:100%;background:var(--success) }
+
+.btn-finalizar-obra{ display:none;margin-top:10px; }
+.btn-finalizar-obra.visible{ display:flex }
+</style>
+
+<script>
+function iconeTipo(tipo){
+  const map={'JANELA':'🪟','MAXI-AR':'🌬️','FACHADA':'🏢','PORTA DE CORRER':'🚪','PORTA DE CORRER INTEGRADA':'🚪⚡','PORTA DE GIRO / PIVOTANTE':'🔄','JANELA INTEGRADA':'🪟⚡','GUARDA CORPO':'🛡️','PORTÃO':'🚧','FIXO':'▪️','PORTA DE CORRER POR FORA DO VÃO':'🚪↔️','BOX':'🚿'};
+  return map[tipo]||'🪟';
+}
+
+(function injetarTelaLista(){
+  const wrapper = document.getElementById('screen-lista-wrapper');
+  wrapper.innerHTML = `
+  <div class="screen" id="screen-lista">
+    <div class="lista-header">
+      <div class="lista-titulo-bloco">
+        <div class="screen-title" id="listaTitle">Esquadrias</div>
+        <div class="screen-subtitle" id="listaSubtitle">Selecione para iniciar a medição</div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <button class="btn btn-ghost" style="font-size:0.72rem;padding:7px 13px" onclick="exportarBackupJSON()">💾 Backup</button>
+        <button onclick="confirmarNovaObra()"
+          style="display:flex;align-items:center;gap:5px;background:#1E3A5F;color:#fff;
+            border:none;border-radius:8px;padding:7px 13px;font-size:0.72rem;
+            font-weight:600;cursor:pointer;transition:background 0.18s;font-family:inherit"
+          onmouseover="this.style.background='#DC2626'"
+          onmouseout="this.style.background='#1E3A5F'">
+          🧱 Nova Obra
+        </button>
+      </div>
+    </div>
+
+    <div class="lista-stats">
+      <div class="stat-card pendente">
+        <span class="stat-num" id="stat-pendente">0</span>
+        <span class="stat-label">Pendentes</span>
+      </div>
+      <div class="stat-card andamento">
+        <span class="stat-num" id="stat-andamento">0</span>
+        <span class="stat-label">Em andamento</span>
+      </div>
+      <div class="stat-card concluida">
+        <span class="stat-num" id="stat-concluida">0</span>
+        <span class="stat-label">Concluídas</span>
+      </div>
+    </div>
+
+    <div id="listaEsquadrias"></div>
+
+    <div class="btn-finalizar-obra" id="btnFinalizarObra">
+      <button class="btn btn-success btn-full btn-lg" onclick="finalizarObra()">
+        🏁 Finalizar Obra Completa
+      </button>
+    </div>
+  </div>`;
+})();
+
+function renderLista(){
+  showScreen('screen-lista');
+  const obra = APP.obra;
+  document.getElementById('listaTitle').textContent = `${obra.proposta||'Obra'} — ${obra.cliente||''}`;
+  document.getElementById('listaSubtitle').textContent = `${APP.esquadrias.length} esquadria(s) · ${obra.cidade||''}`;
+
+  // Atualiza header central
+  const hc = document.getElementById('headerCenter');
+  if(hc){
+    hc.style.display='block';
+    const stats = {pendente:0,andamento:0,concluida:0};
+    APP.esquadrias.forEach(e=>stats[e.status]++);
+    const pct = APP.esquadrias.length ? Math.round((stats.concluida/APP.esquadrias.length)*100) : 0;
+    document.getElementById('headerCenterProposta').textContent =
+      `${obra.proposta||'Obra'} • ${obra.cliente||''}`;
+    document.getElementById('headerCenterMeta').textContent =
+      `${APP.esquadrias.length} esquadrias · ${pct}% concluído`;
+  }
+
+  const s = {pendente:0,andamento:0,concluida:0};
+  APP.esquadrias.forEach(e=>s[e.status]++);
+  document.getElementById('stat-pendente').textContent  = s.pendente;
+  document.getElementById('stat-andamento').textContent = s.andamento;
+  document.getElementById('stat-concluida').textContent = s.concluida;
+
+  const container = document.getElementById('listaEsquadrias');
+  container.innerHTML = '';
+
+  APP.esquadrias.forEach((esq, idx)=>{
+    const tipo = classificarEsquadria(esq.descricao);
+    esq.tipoClassificado = tipo;
+    const icone = iconeTipo(tipo);
+
+    const locText = esq.localizacao
+      ? `<span class="chip chip-blue" style="font-size:0.58rem">${esq.localizacao}</span>`
+      : `<span class="chip chip-gray" style="font-size:0.58rem;opacity:0.7">sem localização</span>`;
+
+    const motorBadge = esq.motor
+      ? `<span class="chip chip-motor" style="font-size:0.58rem">⚡ Motor</span>` : '';
+
+    const linhaBadge = esq.linha
+      ? `<span class="chip ${esq.linha.toUpperCase().includes('GOLD')?'chip-gold':'chip-purple'}" style="font-size:0.58rem">${esq.linha}</span>` : '';
+
+    const descInline = esq.descricao
+      ? `<div class="esq-desc-inline">${esq.descricao}${esq.vidros?` · <span style="opacity:0.7">${esq.vidros}</span>`:''}</div>` : '';
+
+    const card = document.createElement('div');
+    card.className = `esq-card ${esq.status}`;
+    card.onclick = ()=> abrirWizard(idx);
+    card.innerHTML = `
+      <div class="esq-status-icon">${icone}</div>
+      <div class="esq-info">
+        <div class="esq-codigo">${esq.codigo}${(esq.qtdTotal||esq.qtd||1)>1?` <span style="font-size:0.65rem;color:#94a3b8;font-weight:500">×${esq.qtdTotal||esq.qtd}</span>`:''}</div>
+        <div class="esq-tipo">${tipo}</div>
+        ${descInline}
+        <div class="esq-meta">
+          ${locText}${linhaBadge}${motorBadge}
+          ${(esq.largura>0||esq.altura>0)?`<span class="chip chip-gray" style="font-size:0.58rem">${esq.largura||0}×${esq.altura||0}mm</span>`:''}
+        </div>
+        <div class="progress-mini"><div class="progress-mini-fill"></div></div>
+      </div>
+      <div class="esq-arrow">${esq.status==='concluida'?'✅':'›'}</div>`;
+    container.appendChild(card);
+  });
+
+  const todasConcluidas = APP.esquadrias.every(e=>e.status==='concluida');
+  document.getElementById('btnFinalizarObra').classList.toggle('visible', todasConcluidas);
+}
+
+</script>
+<script>
+let _croquiResizeObserver = null;
+const WIZ = {
+  idx:0, etapa:0, steps:[],
+  tempData:{
+    contramarco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+    reboco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+    complementos:{}, observacoes:{},
+    localizacao:'', responsavel:'',
+    fotos:[], croquiData:null, observacaoGeral:''
+  }
+};
+
+function classificarEsquadria(descricao){
+  const d=(descricao||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+  if(d.includes('PORTA DE CORRER') && d.includes('INTEGRADA')) return 'PORTA DE CORRER INTEGRADA';
+  if(d.includes('JANELA DE CORRER') && d.includes('INTEGRADA')) return 'JANELA INTEGRADA';
+  if(d.includes('JANELA') && d.includes('INTEGRADA')) return 'JANELA INTEGRADA';
+  if(d.includes('PORTA DE CORRER POR FORA DO VAO')||d.includes('PORTA DE CORRER POR TRAS')||d.includes('PORTA DE CORRER TRILHO STANLEY')) return 'PORTA DE CORRER POR FORA DO VÃO';
+  if(d.includes('PORTA DE CORRER')) return 'PORTA DE CORRER';
+  if(d.includes('PORTA PIVOTANTE')) return 'PORTA DE GIRO / PIVOTANTE';
+  if(d.includes('PORTA DE GIRO'))   return 'PORTA DE GIRO / PIVOTANTE';
+  if(d.includes('FACHADA')||d.includes('MAXI AR COM PEITORIL E BANDEIRA')) return 'FACHADA';
+  if(d.includes('MAXI-AR')||d.includes('MAXI AR')) return 'MAXI-AR';
+  if(d.includes('GUARDA CORPO'))    return 'GUARDA CORPO';
+  if(d.includes('PORTAO')||d.includes('PORTÃO')) return 'PORTÃO';
+  if(d.includes('FIXO')||d.includes('PAINEL'))   return 'FIXO';
+  if(d.includes('BOX'))             return 'BOX';
+  if(d.includes('JANELA'))          return 'JANELA';
+  return 'JANELA';
+}
+
+function getComplementos(tipo, descricao=''){
+  const desc=descricao.toLowerCase();
+  const temMotor=desc.includes('motor');
+  const ehGold=desc.includes('gold');
+  const fls=desc.match(/(\d+)\s*f(olha|ls)/i);
+  const numFolhas=fls?parseInt(fls[1]):0;
+  const alertaEspessuraGold=ehGold&&numFolhas>=4;
+  const B_MOTOR_TENSAO={id:'motorTensao',pergunta:'Motor (Tensão)',tipo:'opcao',opcoes:['110v','220v'],label:'Campos Complementares'};
+  const B_MOTOR_LADO={id:'motorLado',pergunta:'Lado do Motor',tipo:'opcao',opcoes:['Esquerdo','Direito'],label:'Campos Complementares'};
+  const B_FORRO={id:'forro',pergunta:'Fixada em Forro de Gesso?',tipo:'opcao',opcoes:['Sim','Não'],label:'Campos Complementares'};
+  const B_FACEAMENTO={id:'faceamento',pergunta:'Faceamento',tipo:'opcao',opcoes:['Interno','Eixo','Externo'],label:'Campos Complementares'};
+  const B_ABERTURA={id:'abertura',pergunta:'Abertura',tipo:'opcao',opcoes:['Interna','Externa'],label:'Campos Complementares'};
+  const B_SENTIDO={id:'sentidoAbertura',pergunta:'Sentido de Abertura',tipo:'opcao',opcoes:['Direita','Esquerda'],label:'Campos Complementares'};
+  const B_INSTALACAO={id:'instalacao',pergunta:'Forma de Instalação',tipo:'opcao',opcoes:['Contramarco','Alvenaria'],label:'Campos Complementares'};
+  const B_ESPESSURA={id:'espessura',pergunta:'Espessura de Parede (mm)',tipo:'numero',unidade:'mm',label:'Campos Complementares',minimoObrigatorio:alertaEspessuraGold?200:null,alertaTexto:alertaEspessuraGold?'⚠️ Porta Gold 4+ folhas exige espessura mínima de 200mm!':null};
+  const B_PEITORIL={id:'peitoril',pergunta:'Altura de Peitoril (mm)',tipo:'numero_na',unidade:'mm',helper:'Informe a medida ou selecione N/A',label:'Campos Complementares'};
+  const B_DESNIVEL={id:'desnivel',pergunta:'Altura de Desnível (mm)',tipo:'numero_na',unidade:'mm',helper:'Informe a medida ou selecione N/A',label:'Campos Complementares'};
+  const B_TRILHO={id:'trilho',pergunta:'Tipo de Trilho',tipo:'opcao',opcoes:['Macarrão','Convencional'],label:'Campos Complementares'};
+  const B_PRUMO={id:'prumo',pergunta:'Contramarco no prumo?',tipo:'opcao_condicional',opcoes:['Sim','Não'],condicao:{campo:'instalacao',valor:'Contramarco'},helper:'Exibir somente se Forma de Instalação = Contramarco',label:'Campos Complementares'};
+  const B_SOLEIRA={id:'soleira',pergunta:'Soleira no nível?',tipo:'opcao',opcoes:['Sim','Não'],label:'Campos Complementares'};
+  const B_MOTOR=temMotor?[B_MOTOR_TENSAO,B_MOTOR_LADO]:[];
+  const MATRIZ={
+    'JANELA':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'MAXI-AR':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'FACHADA':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'PORTA DE CORRER':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_DESNIVEL,B_TRILHO,B_PRUMO,B_SOLEIRA],
+    'PORTA DE CORRER INTEGRADA':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_DESNIVEL,B_TRILHO,B_PRUMO,B_SOLEIRA],
+    'JANELA INTEGRADA':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'PORTA DE GIRO / PIVOTANTE':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_ABERTURA,B_SENTIDO,B_INSTALACAO,B_ESPESSURA,B_DESNIVEL,B_PRUMO,B_SOLEIRA],
+    'GUARDA CORPO':[...B_MOTOR,B_FACEAMENTO,B_INSTALACAO,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'PORTÃO':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_ABERTURA,B_SENTIDO,B_INSTALACAO,B_ESPESSURA,B_DESNIVEL,B_TRILHO],
+    'FIXO':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_ESPESSURA,B_PEITORIL,B_PRUMO,B_SOLEIRA],
+    'PORTA DE CORRER POR FORA DO VÃO':[...B_MOTOR,B_FORRO,B_ABERTURA,B_SENTIDO,B_INSTALACAO,B_ESPESSURA,B_DESNIVEL,B_TRILHO,B_SOLEIRA], // sem faceamento — porta de correr por trás nunca usa arremate
+    'BOX':[...B_MOTOR,B_FORRO,B_FACEAMENTO,B_INSTALACAO,B_PRUMO]
+  };
+  MATRIZ['PORTA DE CORRER POR TRÁS']=MATRIZ['PORTA DE CORRER POR FORA DO VÃO'];
+  // Porta de correr por trás da parede — alias adicionais
+  MATRIZ['PORTA DE CORRER POR FORA DO VÃO (SOBREPOR)']=MATRIZ['PORTA DE CORRER POR FORA DO VÃO'];
+  MATRIZ['PORTA DE CORRER TRILHO STANLEY']=MATRIZ['PORTA DE CORRER POR FORA DO VÃO'];
+  MATRIZ['PORTA PIVOTANTE']=MATRIZ['PORTA DE GIRO / PIVOTANTE'];
+  MATRIZ['PORTA DE GIRO']=MATRIZ['PORTA DE GIRO / PIVOTANTE'];
+  return MATRIZ[tipo]||MATRIZ['JANELA'];
+}
+
+const STEPS_MEDICAO_BASE=[
+  {id:'cL1',grupo:'contramarco',campo:'L1',label:'🪟 Contramarco — Largura',pergunta:'L1 — Largura INFERIOR do contramarco',tipo:'numero',unidade:'mm',helper:'Meça de lado a lado na parte inferior do vão'},
+  {id:'cL2',grupo:'contramarco',campo:'L2',label:'🪟 Contramarco — Largura',pergunta:'L2 — Largura CENTRAL do contramarco',tipo:'numero',unidade:'mm',helper:'Meça de lado a lado no centro do vão'},
+  {id:'cL3',grupo:'contramarco',campo:'L3',label:'🪟 Contramarco — Largura',pergunta:'L3 — Largura SUPERIOR do contramarco',tipo:'numero',unidade:'mm',helper:'Meça de lado a lado na parte superior do vão'},
+  {id:'cH1',grupo:'contramarco',campo:'H1',label:'🪟 Contramarco — Altura',pergunta:'H1 — Altura ESQUERDA do contramarco',tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no lado esquerdo do vão'},
+  {id:'cH2',grupo:'contramarco',campo:'H2',label:'🪟 Contramarco — Altura',pergunta:'H2 — Altura CENTRAL do contramarco',tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no centro do vão'},
+  {id:'cH3',grupo:'contramarco',campo:'H3',label:'🪟 Contramarco — Altura',pergunta:'H3 — Altura DIREITA do contramarco',tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no lado direito do vão'},
+  {id:'rL1',grupo:'reboco',campo:'L1',label:'🧱 Reboco — Largura',pergunta:'L1 — Largura INFERIOR do reboco',tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta da parede na parte inferior'},
+  {id:'rL2',grupo:'reboco',campo:'L2',label:'🧱 Reboco — Largura',pergunta:'L2 — Largura CENTRAL do reboco',tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta da parede no centro'},
+  {id:'rL3',grupo:'reboco',campo:'L3',label:'🧱 Reboco — Largura',pergunta:'L3 — Largura SUPERIOR do reboco',tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta da parede na parte superior'},
+  {id:'rH1',grupo:'reboco',campo:'H1',label:'🧱 Reboco — Altura',pergunta:'H1 — Altura ESQUERDA do reboco',tipo:'numero',unidade:'mm',helper:'Meça o vão bruto da parede no lado esquerdo'},
+  {id:'rH2',grupo:'reboco',campo:'H2',label:'🧱 Reboco — Altura',pergunta:'H2 — Altura CENTRAL do reboco',tipo:'numero',unidade:'mm',helper:'Meça o vão bruto da parede no centro'},
+  {id:'rH3',grupo:'reboco',campo:'H3',label:'🧱 Reboco — Altura',pergunta:'H3 — Altura DIREITA do reboco',tipo:'numero',unidade:'mm',helper:'Meça o vão bruto da parede no lado direito'}
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   TIPOS QUE TÊM MEDIÇÃO POR LADOS (múltiplos lados independentes)
+   FIXO em L, GUARDA CORPO multi-trecho
+═══════════════════════════════════════════════════════════════ */
+const TIPOS_MULTIPLOS_LADOS=['FIXO','GUARDA CORPO'];
+
+function ehTipoMultiLados(tipo){
+  return TIPOS_MULTIPLOS_LADOS.some(t=>tipo&&tipo.toUpperCase().includes(t));
+}
+
+/* Gera steps de medição de CM + Reboco para uma esquadria simples (sem lados) */
+function stepsUmVao(prefCM,prefRB,labelVao){
+  const cm=prefCM||'c', rb=prefRB||'r', lab=labelVao||'';
+  return [
+    {id:`${cm}L1`,grupo:'contramarco',campo:'L1',label:`🪟 ${lab}Contramarco — Largura`,pergunta:`L1 — Largura INFERIOR do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça de lado a lado na parte inferior do vão'},
+    {id:`${cm}L2`,grupo:'contramarco',campo:'L2',label:`🪟 ${lab}Contramarco — Largura`,pergunta:`L2 — Largura CENTRAL do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça de lado a lado no centro do vão'},
+    {id:`${cm}L3`,grupo:'contramarco',campo:'L3',label:`🪟 ${lab}Contramarco — Largura`,pergunta:`L3 — Largura SUPERIOR do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça de lado a lado na parte superior do vão'},
+    {id:`${cm}H1`,grupo:'contramarco',campo:'H1',label:`🪟 ${lab}Contramarco — Altura`,pergunta:`H1 — Altura ESQUERDA do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no lado esquerdo'},
+    {id:`${cm}H2`,grupo:'contramarco',campo:'H2',label:`🪟 ${lab}Contramarco — Altura`,pergunta:`H2 — Altura CENTRAL do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no centro'},
+    {id:`${cm}H3`,grupo:'contramarco',campo:'H3',label:`🪟 ${lab}Contramarco — Altura`,pergunta:`H3 — Altura DIREITA do contramarco`,tipo:'numero',unidade:'mm',helper:'Meça do piso ao topo no lado direito'},
+    {id:`${rb}L1`,grupo:'reboco',campo:'L1',label:`🧱 ${lab}Alvenaria/Reboco — Largura`,pergunta:`L1 — Largura INFERIOR da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta da parede na parte inferior'},
+    {id:`${rb}L2`,grupo:'reboco',campo:'L2',label:`🧱 ${lab}Alvenaria/Reboco — Largura`,pergunta:`L2 — Largura CENTRAL da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta no centro'},
+    {id:`${rb}L3`,grupo:'reboco',campo:'L3',label:`🧱 ${lab}Alvenaria/Reboco — Largura`,pergunta:`L3 — Largura SUPERIOR da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça a abertura bruta na parte superior'},
+    {id:`${rb}H1`,grupo:'reboco',campo:'H1',label:`🧱 ${lab}Alvenaria/Reboco — Altura`,pergunta:`H1 — Altura ESQUERDA da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça o vão bruto no lado esquerdo'},
+    {id:`${rb}H2`,grupo:'reboco',campo:'H2',label:`🧱 ${lab}Alvenaria/Reboco — Altura`,pergunta:`H2 — Altura CENTRAL da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça o vão bruto no centro'},
+    {id:`${rb}H3`,grupo:'reboco',campo:'H3',label:`🧱 ${lab}Alvenaria/Reboco — Altura`,pergunta:`H3 — Altura DIREITA da alvenaria`,tipo:'numero',unidade:'mm',helper:'Meça o vão bruto no lado direito'},
+  ];
+}
+
+/* Gera steps de medição para cada lado de um esquadrim em L/multi-lados */
+function stepsMultiLados(numLados){
+  const steps=[];
+  for(let i=1;i<=numLados;i++){
+    const lab=`Lado ${i} — `;
+    // Separador visual
+    steps.push({id:`sep_lado_${i}`,tipo:'separador_lado',label:`📐 Medindo Lado ${i} de ${numLados}`,pergunta:`Agora meça o Lado ${i}`,helper:`Meça as dimensões reais do vão — Lado ${i} de ${numLados}`});
+    // CM e Reboco do lado i (armazena em ladosMedicao[i-1])
+    steps.push({id:`lado${i}_cL1`,grupo:`lado_${i}_contramarco`,campo:'L1',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Largura`,pergunta:`Lado ${i} — L1 Largura INFERIOR do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a largura inferior do Lado ${i}`});
+    steps.push({id:`lado${i}_cL2`,grupo:`lado_${i}_contramarco`,campo:'L2',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Largura`,pergunta:`Lado ${i} — L2 Largura CENTRAL do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a largura central do Lado ${i}`});
+    steps.push({id:`lado${i}_cL3`,grupo:`lado_${i}_contramarco`,campo:'L3',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Largura`,pergunta:`Lado ${i} — L3 Largura SUPERIOR do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a largura superior do Lado ${i}`});
+    steps.push({id:`lado${i}_cH1`,grupo:`lado_${i}_contramarco`,campo:'H1',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Altura`,pergunta:`Lado ${i} — H1 Altura ESQUERDA do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a altura esquerda do Lado ${i}`});
+    steps.push({id:`lado${i}_cH2`,grupo:`lado_${i}_contramarco`,campo:'H2',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Altura`,pergunta:`Lado ${i} — H2 Altura CENTRAL do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a altura central do Lado ${i}`});
+    steps.push({id:`lado${i}_cH3`,grupo:`lado_${i}_contramarco`,campo:'H3',ladoIdx:i-1,label:`🪟 Lado ${i} — Contramarco Altura`,pergunta:`Lado ${i} — H3 Altura DIREITA do contramarco`,tipo:'numero',unidade:'mm',helper:`Meça a altura direita do Lado ${i}`});
+    steps.push({id:`lado${i}_rL1`,grupo:`lado_${i}_reboco`,campo:'L1',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Largura`,pergunta:`Lado ${i} — L1 Largura INFERIOR da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a largura bruta inferior do Lado ${i}`});
+    steps.push({id:`lado${i}_rL2`,grupo:`lado_${i}_reboco`,campo:'L2',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Largura`,pergunta:`Lado ${i} — L2 Largura CENTRAL da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a largura bruta central do Lado ${i}`});
+    steps.push({id:`lado${i}_rL3`,grupo:`lado_${i}_reboco`,campo:'L3',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Largura`,pergunta:`Lado ${i} — L3 Largura SUPERIOR da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a largura bruta superior do Lado ${i}`});
+    steps.push({id:`lado${i}_rH1`,grupo:`lado_${i}_reboco`,campo:'H1',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Altura`,pergunta:`Lado ${i} — H1 Altura ESQUERDA da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a altura bruta esquerda do Lado ${i}`});
+    steps.push({id:`lado${i}_rH2`,grupo:`lado_${i}_reboco`,campo:'H2',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Altura`,pergunta:`Lado ${i} — H2 Altura CENTRAL da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a altura bruta central do Lado ${i}`});
+    steps.push({id:`lado${i}_rH3`,grupo:`lado_${i}_reboco`,campo:'H3',ladoIdx:i-1,label:`🧱 Lado ${i} — Alvenaria Altura`,pergunta:`Lado ${i} — H3 Altura DIREITA da alvenaria`,tipo:'numero',unidade:'mm',helper:`Meça a altura bruta direita do Lado ${i}`});
+  }
+  return steps;
+}
+
+function buildSteps(esq){
+  const tipo=esq.tipoClassificado||classificarEsquadria(esq.descricao);
+  esq.tipoClassificado=tipo;
+  const steps=[];
+  const multiLados=ehTipoMultiLados(tipo);
+
+  // 1. Localização
+  steps.push({id:'localizacao',label:'Localização da Esquadria',pergunta:'Onde está instalada esta esquadria?',tipo:'localizacao',helper:'Ex: Quarto 01, Sala de Estar, Banheiro Social…'});
+
+  // 2. SE tipo multi-lados: perguntar número de lados ANTES das medições
+  if(multiLados){
+    steps.push({
+      id:'numLados',tipo:'num_lados',
+      label:'📐 Número de Lados',
+      pergunta:'Quantos lados independentes tem esta esquadria?',
+      helper:'Ex: Quadro fixo em L tem 2 lados. Guarda-corpo em U tem 3 lados.'
+    });
+    // Os steps de medição serão inseridos dinamicamente em wizProximo ao receber numLados
+    // (placeholder — será substituído quando o medidor responder)
+    steps.push({id:'_medicao_placeholder',tipo:'_placeholder',label:'',pergunta:''});
+  } else {
+    // 3a. Instalação (Contramarco / Alvenaria) — ANTES das medições, esquadria simples
+    steps.push({id:'instalacao',pergunta:'Forma de Instalação',tipo:'opcao',opcoes:['Contramarco','Alvenaria'],label:'Instalação'});
+    // 4. Medições (6 CM + 6 Reboco)
+    stepsUmVao('c','r','').forEach(s=>steps.push(s));
+  }
+
+  // 5. Complementos — excluindo instalação (já perguntada acima)
+  getComplementos(tipo,esq.descricao||'')
+    .filter(camp=>camp.id!=='instalacao'&&camp.id!=='fixoEmL'&&camp.id!=='qtdLadosFixoL')
+    .forEach(camp=>steps.push({...camp}));
+
+  // 6. Croqui, Fotos, Obs, Revisão
+  steps.push({id:'croqui',label:'Croqui Técnico',pergunta:'Faça o croqui do vão e da esquadria',tipo:'croqui',helper:'Use as ferramentas abaixo para desenhar.'});
+  steps.push({id:'fotos',label:'Fotografias do Vão',pergunta:'Adicione fotos do vão (opcional)',tipo:'fotos',helper:'Fotos são opcionais.'});
+  steps.push({id:'observacaoGeral',label:'Observações Gerais',pergunta:'Observações adicionais sobre esta esquadria',tipo:'observacao',helper:'Campo livre.'});
+  steps.push({id:'revisao',label:'Revisão Final',pergunta:'Confirme os dados antes de concluir',tipo:'revisao'});
+  return steps;
+}
+
+function getObservacoesGuiadas(tipo){ return []; }
+
+function confirmarNovaObra(){
+  const total=APP.esquadrias?.length||0;
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.id='overlayNovaObra';
+  overlay.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center"><div style="font-size:2rem;margin-bottom:10px">🧱</div><h2 style="color:#1E3A5F;margin:0 0 7px;font-size:1.1rem">Nova Obra</h2><p style="color:#555;font-size:0.82rem;margin:0 0 5px">Esta ação irá <strong>apagar todos os dados</strong> da obra atual.</p><p style="color:#888;font-size:0.75rem;margin:0 0 20px">${total} esquadria${total!==1?'s':''} serão removidas.</p><div style="background:#FEF3C7;border-radius:7px;padding:9px;margin-bottom:20px;font-size:0.73rem;color:#92400E">⚠️ <strong>Faça um backup antes</strong> se quiser preservar os dados!</div><div style="display:flex;gap:10px;justify-content:center"><button onclick="document.getElementById('overlayNovaObra').remove()" style="padding:11px 22px;border-radius:8px;border:1.5px solid #CBD5E1;background:#fff;color:#374151;font-weight:600;cursor:pointer;font-size:0.85rem;font-family:inherit;min-width:110px">✖ Cancelar</button><button onclick="executarNovaObra()" style="padding:11px 22px;border-radius:8px;border:none;background:#DC2626;color:#fff;font-weight:700;cursor:pointer;font-size:0.85rem;font-family:inherit;min-width:110px">🧱 Confirmar</button></div></div>`;
+  document.body.appendChild(overlay);
+}
+
+function executarNovaObra(){
+  const ov=document.getElementById('overlayNovaObra');
+  if(ov) ov.remove();
+  APP.esquadrias=[]; APP.obra=null; APP.finalizada=false;
+  WIZ.idx=0; WIZ.etapa=0; WIZ.steps=[];
+  WIZ.tempData={contramarco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},reboco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},complementos:{},observacoes:{},localizacao:'',responsavel:'',fotos:[],croquiData:null,observacaoGeral:''};
+  try{document.getElementById('nomeMedidor').value='';}catch(e){}
+  try{document.getElementById('fileInput').value='';}catch(e){}
+  localStorage.removeItem('maxibell_autosave');
+  const hc=document.getElementById('headerCenter');
+  if(hc) hc.style.display='none';
+  showScreen('screen-import');
+  showToast('✅ Pronto! Nova obra iniciada.','info');
+}
+
+(function initSwipeNav(){
+  let touchStartX=0, touchStartY=0, touchEndX=0, touchEndY=0;
+  const SWIPE_THRESHOLD=60;
+  const VERTICAL_TOLERANCE=45;
+
+  const area=document.querySelector('.container');
+  if(!area) return;
+
+let _swipeStartTarget=null;
+  area.addEventListener('touchstart',e=>{
+    touchStartX=e.changedTouches[0].screenX;
+    touchStartY=e.changedTouches[0].screenY;
+    _swipeStartTarget=e.target;
+  },{passive:true});
+
+  area.addEventListener('touchend',e=>{
+    touchEndX=e.changedTouches[0].screenX;
+    touchEndY=e.changedTouches[0].screenY;
+    handleSwipe();
+  },{passive:true});
+
+function handleSwipe(){
+    if(!document.getElementById('screen-wizard')?.classList.contains('active')) return;
+    // Não navegar quando o passo é o Croqui (o dedo está desenhando, não deslizando)
+    const _step=WIZ.steps[WIZ.etapa];
+    if(_step && _step.tipo==='croqui') return;
+    if(_swipeStartTarget && _swipeStartTarget.closest && _swipeStartTarget.closest('#croquiCanvas,.cq-tb,.wsc')) return;
+    const diffX=touchEndX-touchStartX;
+    const diffY=Math.abs(touchEndY-touchStartY);
+    if(diffY>VERTICAL_TOLERANCE) return;
+
+    if(diffX>SWIPE_THRESHOLD){
+      const btnAnt=document.getElementById('btnWizAnterior');
+      if(btnAnt&&btnAnt.style.display!=='none'){
+        coletarStepAtual();
+        wizAnterior();
+        mostrarFeedbackSwipe('← Anterior','left');
+      }
+      return;
+    }
+
+    /* Swipe ESQUERDA → avança (Próximo) — VALIDA antes */
+    if(diffX<-SWIPE_THRESHOLD){
+      coletarStepAtual();
+      if(!validarStepAtual()){
+        mostrarFeedbackSwipe('⚠️ Preencha o campo','right');
+        if(navigator.vibrate) navigator.vibrate([40,20,40]);
+        return;
+      }
+      wizProximo();
+      mostrarFeedbackSwipe('Próximo →','right');
+    }
+  }
+
+  function mostrarFeedbackSwipe(texto,direcao){
+    const existente=document.getElementById('swipeFeedback');
+    if(existente) existente.remove();
+    const el=document.createElement('div');
+    el.id='swipeFeedback';
+    el.textContent=texto;
+    el.style.cssText=`position:fixed;top:50%;${direcao==='left'?'left:16px':'right:16px'};
+      transform:translateY(-50%) scale(0.85);
+      background:rgba(13,110,253,0.88);color:#fff;
+      font-family:'Montserrat',sans-serif;font-size:0.72rem;font-weight:700;
+      padding:9px 16px;border-radius:50px;
+      box-shadow:0 4px 16px rgba(13,110,253,0.28);
+      z-index:9999;pointer-events:none;opacity:0;
+      transition:opacity 0.18s ease,transform 0.18s ease;`;
+    document.body.appendChild(el);
+    requestAnimationFrame(()=>{
+      el.style.opacity='1';
+      el.style.transform='translateY(-50%) scale(1)';
+    });
+    setTimeout(()=>{
+      el.style.opacity='0';
+      el.style.transform='translateY(-50%) scale(0.85)';
+      setTimeout(()=>el.remove(),200);
+    },700);
+  }
+})();
+
+function iniciarWizard(idx){
+  const esq=APP.esquadrias[idx];
+  if(!esq) return;
+  if(!esq.tipoClassificado) esq.tipoClassificado=classificarEsquadria(esq.descricao);
+  WIZ.idx=idx; WIZ.etapa=0; WIZ.steps=buildSteps(esq);
+  let dadosRestaurados=null;
+
+  if(esq._tempData){
+    // Sessão em andamento — restaurar rascunho
+    dadosRestaurados=JSON.parse(JSON.stringify(esq._tempData));
+  } else if(esq.status==='concluida'||esq.contramarco?.H1||esq.medidas?.contramarco?.H1||esq.ladosMedicao?.length){
+    // Esquadria concluída (inclusive via backup JSON) — restaurar TODOS os dados
+    // O JSON exporta medidas dentro de esq.medidas.contramarco / esq.medidas.reboco
+    // e complementos dentro de esq.camposComplementares
+    const cm  = esq.contramarco         || esq.medidas?.contramarco  || {H1:'',H2:'',H3:'',L1:'',L2:'',L3:''};
+    const rb  = esq.reboco              || esq.medidas?.reboco        || {H1:'',H2:'',H3:'',L1:'',L2:'',L3:''};
+    const comp= esq.complementos        || esq.camposComplementares   || {};
+    dadosRestaurados={
+      contramarco:    {...cm},
+      reboco:         {...rb},
+      complementos:   {...comp},
+      observacoes:    {...(esq.observacoes   ||{})},
+      localizacao:    esq.localizacao    ||'',
+      responsavel:    esq.responsavel    ||APP.obra?.medidor||'',
+      fotos:          [...(esq.fotos         ||[])],
+      croquiData:     esq.croquiData     || esq.croqui || null,
+      observacaoGeral: esq.observacaoGeral||'',
+      _croquiDecisao:  (esq.croquiData||esq.croqui)?true:undefined,
+      // Multi-lados
+      numLados:       esq.numLados       ||null,
+      ladosMedicao:   esq.ladosMedicao   ? JSON.parse(JSON.stringify(esq.ladosMedicao)) : [],
+    };
+  } else {
+    dadosRestaurados={
+      contramarco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+      reboco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},
+      complementos:{},observacoes:{},localizacao:'',
+      responsavel:APP.obra?.medidor||'',fotos:[],croquiData:null,
+      observacaoGeral:'',numLados:null,ladosMedicao:[]
+    };
+  }
+  WIZ.tempData=dadosRestaurados;
+
+  // Se multi-lados com dados restaurados: inserir steps por lado agora
+  if(WIZ.tempData.numLados&&WIZ.tempData.ladosMedicao?.length){
+    const n=WIZ.tempData.numLados;
+    const phIdx=WIZ.steps.findIndex(s=>s.id==='_medicao_placeholder');
+    if(phIdx>=0){
+      const novos=[];
+      novos.push({id:'instalacao',pergunta:'Forma de Instalação',tipo:'opcao',opcoes:['Contramarco','Alvenaria'],label:'Instalação'});
+      stepsMultiLados(n).forEach(s=>novos.push(s));
+      WIZ.steps.splice(phIdx,1,...novos);
+    }
+  }
+
+  // Esquadria concluída: abrir direto na revisão (medidor pode navegar livremente)
+  if(esq.status==='concluida'){
+    const revIdx=WIZ.steps.findIndex(s=>s.tipo==='revisao');
+    if(revIdx>=0) WIZ.etapa=revIdx;
+  }
+
+  renderWizard();
+  showScreen('screen-wizard');
+}
+
+function renderWizard(){
+  const esq=APP.esquadrias[WIZ.idx];
+  const step=WIZ.steps[WIZ.etapa];
+  const total=WIZ.steps.length;
+  const pct=Math.round((WIZ.etapa/total)*100);
+  document.getElementById('wizEsqCodigo').textContent=esq.codigo||`Esq. ${WIZ.idx+1}`;
+  document.getElementById('wizEsqTipo').textContent=esq.tipoClassificado||'';
+  document.getElementById('wizEtapaAtual').textContent=WIZ.etapa+1;
+  document.getElementById('wizEtapaTotal').textContent=total;
+  document.getElementById('wizProgressBar').style.width=pct+'%';
+  document.getElementById('wizLabel').textContent=step.label||'';
+  const wb=document.getElementById('wizDescBanner');
+  const wt=document.getElementById('wizDescTexto');
+  const wm=document.getElementById('wizMedidasProjeto');
+  if(wb&&esq.descricao){ wb.style.display='block'; wt.textContent=esq.descricao; const medL=esq.largura||esq.larguraProjeto||0,medH=esq.altura||esq.alturaProjeto||0; const qi=(esq.qtdTotal&&esq.qtdTotal>1)?` · Unidade ${esq.qtdIndice}/${esq.qtdTotal}`:''; wm.textContent=medL&&medH?`Projeto: ${medL}×${medH}mm${qi}`:qi||''; } else if(wb) wb.style.display='none';
+  document.getElementById('btnWizAnterior').style.display=WIZ.etapa===0?'none':'flex';
+  document.getElementById('btnWizProximo').textContent=WIZ.etapa===total-1?'✅ Concluir':'Próximo →';
+  const c=document.getElementById('wizardContent');
+  c.innerHTML='';
+  // Limpa ResizeObserver e listener de orientação ao trocar de step
+  if(_croquiResizeObserver){ _croquiResizeObserver.disconnect(); _croquiResizeObserver=null; }
+  const cvAntigo=document.getElementById('croquiCanvas');
+  if(cvAntigo?._removeOrientacao) cvAntigo._removeOrientacao();
+
+  if(esq.descricao){
+    const db=document.createElement('div');
+    db.style.cssText='background:rgba(13,110,253,0.05);border-left:2px solid rgba(13,110,253,0.3);border-radius:0 6px 6px 0;padding:7px 10px;margin-bottom:10px;font-size:0.72rem;color:#0C4A6E;display:flex;gap:7px;align-items:center;';
+    db.innerHTML=`<span>📋</span><div><div style="font-weight:700;font-size:0.58rem;text-transform:uppercase;color:#38BDF8;margin-bottom:2px">Descrição XLS</div><div style="font-weight:500">${esq.descricao}</div></div>`;
+    c.appendChild(db);
+  }
+  switch(step.tipo){
+    case 'localizacao':       renderStepLocalizacao(c,step);       break;
+    case 'numero':            renderStepNumero(c,step);            break;
+    case 'numero_na':         renderStepNumeroNA(c,step);          break;
+    case 'opcao':             renderStepOpcao(c,step);             break;
+    case 'opcao_condicional': renderStepOpcaoCondicional(c,step);  break;
+    case 'croqui':            renderStepCroqui(c,step);            break;
+    case 'fotos':             renderStepFotos(c,step);             break;
+    case 'observacao':        renderStepObservacao(c,step);        break;
+    case 'revisao':           renderStepRevisao(c,esq);            break;
+    case 'fixo_l':            renderStepFixoL(c,step);             break;
+    case 'num_lados':         renderStepNumLados(c,step);          break;
+    case 'separador_lado':    renderStepSeparadorLado(c,step);     break;
+    case '_placeholder':      c.innerHTML='';                       break;
+    default:                  renderStepOpcao(c,step);
+  }
+} // ← fecha renderWizard
+
+function renderStepFixoL(c,step){
+  // Inicializar lados conforme a quantidade escolhida no step anterior
+  const qtdEscolhida=parseInt((WIZ.tempData.complementos['qtdLadosFixoL']||'2').replace(/\D/g,''))||2;
+  if(!WIZ.tempData.ladosFixo||WIZ.tempData.ladosFixo.length!==qtdEscolhida)
+    WIZ.tempData.ladosFixo=Array.from({length:qtdEscolhida},(_,i)=>({largura:WIZ.tempData.ladosFixo?.[i]?.largura||''}));
+  const lados=WIZ.tempData.ladosFixo;
+  const esq=APP.esquadrias[WIZ.idx];
+  const altProjeto=esq?.altura||0;
+  c.innerHTML=`
+    <div class="wizard-step-card">
+      <div class="wizard-step-title">${step.label||'Quadro Fixo em L'}</div>
+      <div class="wizard-question">${step.pergunta}</div>
+      <div style="background:#EFF6FF;border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:0.75rem;color:#1D4ED8;font-weight:600">
+        ℹ️ A altura é a mesma para todos os lados: <strong>${altProjeto}mm</strong>
+      </div>
+      <div id="ladosContainer">
+        ${lados.map((l,i)=>`
+          <div style="margin-bottom:10px">
+            <label class="input-label">Lado ${i+1} — Largura (mm)</label>
+            <div class="num-input-wrap">
+              <input type="number" inputmode="numeric" class="num-input-big"
+                id="ladoL_${i}"
+                value="${l.largura||''}"
+                placeholder="0"
+                oninput="atualizarLadoFixoL(${i},this.value)"
+                style="width:140px">
+              <span class="num-unit">mm</span>
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-outline" style="width:100%;margin-top:8px;font-size:0.8rem"
+        onclick="adicionarLadoFixoLRender()">＋ Adicionar lado</button>
+    </div>`;
+}
+function adicionarLadoFixoLRender(){
+  if(!WIZ.tempData.ladosFixo) WIZ.tempData.ladosFixo=[{largura:''},{largura:''}];
+  WIZ.tempData.ladosFixo.push({largura:''});
+  renderWizard();
+}
+function atualizarLadoFixoL(i,val){
+  if(!WIZ.tempData.ladosFixo) WIZ.tempData.ladosFixo=[];
+  while(WIZ.tempData.ladosFixo.length<=i) WIZ.tempData.ladosFixo.push({largura:''});
+  WIZ.tempData.ladosFixo[i]={largura:parseInt(val)||''};
+}
+
+function renderStepNumLados(c,step){
+  const esq=APP.esquadrias[WIZ.idx];
+  const largTotal=esq?.largura||esq?.larguraProjeto||0;
+  const atual=parseInt(WIZ.tempData.numLados)||'';
+  c.innerHTML=`
+    <div class="wizard-step-card">
+      <div class="wizard-step-title">Número de Lados da Esquadria</div>
+      ${largTotal?`<div style="font-size:0.72rem;font-weight:600;color:var(--muted);margin-bottom:18px">
+        Largura total do projeto: <strong style="color:var(--primary)">${largTotal}mm</strong> — a soma dos lados deve ficar próxima deste valor (tolerância ±50mm)
+      </div>`:''}
+      <div class="num-input-wrap">
+        <input type="number" inputmode="numeric" id="inputNumLados"
+          class="num-input-big"
+          min="1" max="10"
+          value="${atual}"
+          placeholder="—"
+          oninput="WIZ.tempData.numLados=parseInt(this.value)||0"
+          style="width:140px">
+        <span class="num-unit">lados</span>
+      </div>
+      <div style="font-size:0.68rem;color:var(--muted);text-align:center;margin-top:8px">Digite um número de 1 a 10</div>
+    </div>`;
+  setTimeout(()=>{ const inp=document.getElementById('inputNumLados'); if(inp) inp.focus(); },150);
+}
+function selecionarNumLados(n,btn){
+  WIZ.tempData.numLados=n;
+  document.querySelectorAll('#wizardContent .opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const inp=document.getElementById('inputNumLadosLivre');
+  if(inp) inp.value='';
+}
+function selecionarNumLadosLivre(val){
+  const n=parseInt(val);
+  if(n>=1&&n<=20){
+    WIZ.tempData.numLados=n;
+    document.querySelectorAll('#wizardContent .opt-btn').forEach(b=>b.classList.remove('selected'));
+  }
+}
+
+function renderStepSeparadorLado(c,step){
+  const esq=APP.esquadrias[WIZ.idx];
+  const largTotal=esq?.largura||esq?.larguraProjeto||0;
+  // Calcular soma dos lados já medidos
+  const lados=WIZ.tempData.ladosMedicao||[];
+  let somaL=0;
+  lados.forEach(l=>{
+    const vals=Object.entries(l.contramarco||{}).filter(([k])=>k.startsWith('L')).map(([,v])=>parseInt(v)).filter(v=>!isNaN(v)&&v>0);
+    if(vals.length) somaL+=Math.min(...vals);
+  });
+  const diff=largTotal&&somaL?Math.abs(somaL-largTotal):0;
+  const aviso=somaL>0&&largTotal&&diff>50;
+  c.innerHTML=`
+    <div class="wizard-step-card" style="text-align:center">
+      <div class="wizard-step-title">${step.label}</div>
+      <div style="font-size:2.5rem;margin:14px 0">📏</div>
+      <div class="wizard-question">${step.pergunta}</div>
+      ${somaL>0?`<div style="background:${aviso?'#FEF3C7':'#DCFCE7'};border-radius:8px;padding:10px 14px;margin:12px 0;font-size:0.78rem;font-weight:700;color:${aviso?'#92400E':'#15803D'}">
+        ${aviso?`⚠️ Soma dos lados: ${somaL}mm · Total projeto: ${largTotal}mm · Diferença: ${diff}mm — Verifique as medidas anteriores!`:`✅ Soma dos lados: ${somaL}mm · Total projeto: ${largTotal}mm`}
+      </div>`:''}
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:8px">${step.helper||''}</div>
+    </div>`;
+}
+
+function renderStepObservacao(c,step){
+  const v=(WIZ.tempData.observacaoGeral||'').toUpperCase();
+  c.innerHTML=`<div class="wizard-step-card">
+    <div class="wizard-step-title">${step.label}</div>
+    <div class="wizard-question">${step.pergunta}</div>
+    <textarea class="input-field" id="inputObsGeral" rows="6"
+      placeholder="Digite aqui suas observações…"
+      autocapitalize="characters"
+      oninput="this.value=this.value.toUpperCase();WIZ.tempData.observacaoGeral=this.value"
+      style="resize:vertical;line-height:1.5;font-family:inherit;font-size:0.85rem;font-weight:500;text-transform:uppercase">${v}</textarea>
+    <p class="num-helper">${step.helper}</p>
+  </div>`;
+  setTimeout(()=>{ const t=document.getElementById('inputObsGeral'); if(t) t.focus(); },100);
+}
+
+
+function removerFoto(idx){
+  if(!confirm('Remover esta foto?')) return;
+  WIZ.tempData.fotos.splice(idx,1);
+  renderStepFotos(
+    document.getElementById('wizardContent'),
+    WIZ.steps[WIZ.etapa]
+  );
+}
+
+function renderStepLocalizacao(c,step){
+  const val=(WIZ.tempData.localizacao||'').toUpperCase();
+  c.innerHTML=`<div class="wizard-step-card"><div class="wizard-step-title">${step.label}</div><div class="wizard-question">${step.pergunta}</div><input type="text" class="input-field" id="inputLocalizacao" value="${val}" placeholder="Ex: Quarto 01, Sala…" autocapitalize="characters" oninput="this.value=this.value.toUpperCase();WIZ.tempData.localizacao=this.value.trim()"><p class="num-helper">${step.helper}</p></div>`;
+  setTimeout(()=>{ const i=document.getElementById('inputLocalizacao'); if(i) i.focus(); },100);
+}
+
+
+/* ── Rótulos dinâmicos conforme instalação ─────────────────
+   Contramarco → nomes originais
+   Alvenaria   → 1ª medição = "Reboco Interno", 2ª = "Reboco Externo"
+─────────────────────────────────────────────────────────── */
+function rotularMedicao(step){
+  const inst=(WIZ.tempData.complementos?.instalacao||'').toUpperCase();
+  const ehAlvenaria=inst==='ALVENARIA';
+  const ehCM=step.grupo==='contramarco'||step.grupo?.endsWith('_contramarco');
+  const ehRB=step.grupo==='reboco'||step.grupo?.endsWith('_reboco');
+  if(!ehCM&&!ehRB) return {label:step.label,pergunta:step.pergunta,grupoClass:''};
+
+  let nomeGrupo, icone, grupoClass;
+  if(ehCM){
+    nomeGrupo = ehAlvenaria ? 'Reboco Interno' : 'Contramarco';
+    icone     = ehAlvenaria ? '🧱' : '🪟';
+    grupoClass= ehAlvenaria ? ' step-reboco' : ' step-contramarco';
+  } else {
+    nomeGrupo = ehAlvenaria ? 'Reboco Externo' : 'Reboco';
+    icone     = '🧱';
+    grupoClass= ' step-reboco';
+  }
+
+  const isL=step.campo?.startsWith('L');
+  const dim=isL?'Largura':'Altura';
+  const posL={L1:'INFERIOR',L2:'CENTRAL',L3:'SUPERIOR'};
+  const posH={H1:'ESQUERDA',H2:'CENTRAL',H3:'DIREITA'};
+  const pos=(isL?posL:posH)[step.campo]||'';
+  // prefixo de lado para multi-lados (ex: "Lado 1 — ")
+  const prefLado=step.ladoIdx!=null?`Lado ${step.ladoIdx+1} — `:'';
+
+  const label=`${icone} ${prefLado}${nomeGrupo} — ${dim}`;
+  const pergunta=`${prefLado}${step.campo} — ${dim} ${pos} ${ehCM?'do':'da'} ${nomeGrupo.toLowerCase()}`;
+  return {label, pergunta, grupoClass};
+}
+
+function renderStepNumero(c,step){
+  const esq=APP.esquadrias[WIZ.idx];
+  let valorAtual='';
+  if(step.grupo==='contramarco') valorAtual=WIZ.tempData.contramarco[step.campo]||'';
+  else if(step.grupo==='reboco') valorAtual=WIZ.tempData.reboco[step.campo]||'';
+  else if(step.grupo?.startsWith('lado_')){
+    const idx=step.ladoIdx||0;
+    const sub=step.grupo.endsWith('_contramarco')?'contramarco':'reboco';
+    valorAtual=WIZ.tempData.ladosMedicao?.[idx]?.[sub]?.[step.campo]||'';
+  } else valorAtual=WIZ.tempData.complementos[step.id]||'';
+
+  const {label,pergunta,grupoClass}=rotularMedicao(step);
+  c.innerHTML=`<div class="wizard-step-card${grupoClass}"><div class="wizard-step-title">${label}</div><div class="wizard-question">${pergunta}</div><div class="num-input-wrap"><input type="number" class="num-input-big" id="inputNumBig" value="${valorAtual}" placeholder="0" inputmode="numeric" oninput="onNumericInput(this,'${step.campo||''}','${step.grupo||''}',${esq.largura||esq.larguraProjeto||0},${esq.altura||esq.alturaProjeto||0})"><span class="num-unit">mm</span></div><p class="num-helper">${step.helper||''}</p><div id="alertaDivergencia"></div></div>`;
+  setTimeout(()=>{ const i=document.getElementById('inputNumBig'); if(i){i.focus();i.select();} },100);
+}
+
+function onNumericInput(input,campo,grupo,largProj,altProj){
+  const valor=parseInt(input.value)||0;
+  const box=document.getElementById('alertaDivergencia');
+  if(!box) return;
+  // Medidas de lados individuais (multi-lados): sem alerta — soma validada só no fim
+  const ehLado=grupo&&grupo.startsWith('lado_');
+  const ehMedida=!ehLado&&(grupo==='contramarco'||grupo==='reboco');
+  // Qualquer alteração de valor reseta a confirmação anterior deste passo
+  WIZ.tempData._divOK = WIZ.tempData._divOK || {};
+  const stepId=(WIZ.steps[WIZ.etapa]||{}).id||'';
+  WIZ.tempData._divOK[stepId]=false;
+  const isAltura=String(campo).startsWith('H');
+  const projetado=isAltura?altProj:largProj;
+  if(!ehMedida||!valor||!projetado){ box.innerHTML=''; return; }
+  const diff=Math.abs(valor-projetado);
+  if(diff>=TOLERANCIA_PROJETO_MM){
+    const dim=isAltura?'ALTURA':'LARGURA';
+    box.innerHTML=`<div style="background:#FEE2E2;border:1px solid #FCA5A5;border-left:4px solid #DC2626;border-radius:0 10px 10px 0;padding:12px 14px;margin-top:12px;font-size:0.8rem;color:#991B1B">
+      <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:1.05rem">🚫</span>
+      <div><strong>Divergência de ${diff}mm em ${dim}!</strong><br>
+      Projeto: <strong>${projetado}mm</strong> · Medido: <strong>${valor}mm</strong><br>
+      <span style="font-size:0.7rem;opacity:0.85">A medida diverge ${TOLERANCIA_PROJETO_MM}mm ou mais do projeto. Verifique antes de avançar.</span></div></div>
+      <button onclick="confirmarDivergencia('${stepId}')" style="margin-top:10px;width:100%;background:#DC2626;color:#fff;border:none;border-radius:9px;padding:10px;font-family:inherit;font-weight:700;font-size:0.78rem;cursor:pointer">DESEJA PROSSEGUIR?</button>
+    </div>`;
+  } else { box.innerHTML=''; }
+}
+
+function confirmarDivergencia(stepId){
+  WIZ.tempData._divOK = WIZ.tempData._divOK || {};
+  WIZ.tempData._divOK[stepId]=true;
+  limparErroStep();
+  const box=document.getElementById('alertaDivergencia');
+  if(box) box.innerHTML=`<div style="background:#DCFCE7;border-left:4px solid #16A34A;border-radius:0 9px 9px 0;padding:9px 12px;margin-top:12px;font-size:0.75rem;font-weight:700;color:#166534">✅ Divergência confirmada — você já pode avançar.</div>`;
+}
+
+function renderStepNumeroNA(c,step){
+  const val=WIZ.tempData.complementos[step.id]||'';
+  const isNA=val==='N/A';
+  c.innerHTML=`<div class="wizard-step-card"><div class="wizard-step-title">${step.label||'Campos Complementares'}</div><div class="wizard-question">${step.pergunta}</div><div class="num-input-wrap" id="numNaWrap" style="${isNA?'opacity:0.4;pointer-events:none':''}"><input type="number" class="num-input-big" id="inputNumBig" value="${isNA?'':val}" placeholder="0" inputmode="numeric"><span class="num-unit">mm</span></div><p class="num-helper">${step.helper||''}</p><div style="margin-top:12px;text-align:center"><button class="opt-btn ${isNA?'selected':''}" id="btnNA" style="display:inline-flex;max-width:200px" onclick="toggleNA()">N/A — Não se aplica</button></div></div>`;
+}
+
+function toggleNA(){
+  const btn=document.getElementById('btnNA'),wrap=document.getElementById('numNaWrap'),input=document.getElementById('inputNumBig');
+  const isNA=!btn.classList.contains('selected');
+  btn.classList.toggle('selected',isNA);
+  if(wrap) wrap.style.cssText=isNA?'opacity:0.4;pointer-events:none':'';
+  if(input&&isNA) input.value='';
+}
+
+function renderStepOpcao(c,step){
+  const valAtual=WIZ.tempData.complementos[step.id]||WIZ.tempData.observacoes[step.id]||'';
+  c.innerHTML=`<div class="wizard-step-card"><div class="wizard-step-title">${step.label||'Campos Complementares'}</div><div class="wizard-question">${step.pergunta}</div><div class="opcoes-wrap">${step.opcoes.map(op=>`<button class="opt-btn ${valAtual===op?'selected':''}" onclick="selecionarOpcao('${step.id}','${op}',this)">${op}</button>`).join('')}</div></div>`;
+}
+
+function renderStepOpcaoCondicional(c,step){
+  const instalacao=WIZ.tempData.complementos['instalacao']||'';
+  const valAtual=WIZ.tempData.complementos[step.id]||'';
+  if(instalacao!=='Contramarco'){
+    c.innerHTML=`<div class="wizard-step-card"><div class="wizard-step-title">${step.label||'Campos Complementares'}</div><div class="wizard-question">${step.pergunta}</div><div style="text-align:center;padding:18px 0;color:#94a3b8;font-size:0.82rem">ℹ️ Não aplicável — instalação em Alvenaria.</div></div>`;
+    WIZ.tempData.complementos[step.id]='N/A'; return;
+  }
+  c.innerHTML=`<div class="wizard-step-card"><div class="wizard-step-title">${step.label||'Campos Complementares'}</div><div class="wizard-question">${step.pergunta}</div><div class="opcoes-wrap">${step.opcoes.map(op=>`<button class="opt-btn ${valAtual===op?'selected':''}" onclick="selecionarOpcao('${step.id}','${op}',this)">${op}</button>`).join('')}</div></div>`;
+}
+
+function selecionarOpcao(id,valor,btn){
+  btn.closest('.opcoes-wrap').querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const step=WIZ.steps[WIZ.etapa];
+  if(step&&(step.tipo==='opcao'||step.tipo==='opcao_condicional')){
+    if(id.startsWith('obs_')) WIZ.tempData.observacoes[id]=valor;
+    else WIZ.tempData.complementos[id]=valor;
+  }
+  limparErroStep();
+  /* Avança automaticamente após breve feedback visual */
+  setTimeout(()=>{
+    if(WIZ.etapa < WIZ.steps.length - 1){
+      autoSalvar();
+      WIZ.etapa++;
+      renderWizard();
+    }
+  }, 320);
+}
+
+let cqC,cqCtx,cqDraw=false,cqX,cqY;
+let cqH=[],cqCor='#1e3a5f',cqEsp=2,cqModo='caneta';
+
+/* Referência global para redimensionar canvas ao rotacionar */
+ function renderStepCroqui(c,step){
+  const jD=WIZ.tempData._croquiDecisao!==undefined;
+  const qD=WIZ.tempData._croquiDecisao===true;
+  if(!jD){
+    c.innerHTML=`<div class="wsc"><div class="wsc-label">${step.label}</div><div class="wsc-q">Deseja fazer um croqui técnico do vão?</div><div class="wsc-opts"><button class="wsc-opt" onclick="decidirCroqui(true)">✏️ Sim — quero desenhar</button><button class="wsc-opt" onclick="decidirCroqui(false)">⏭️ Não — pular esta etapa</button></div></div>`;
+    return;
+  }
+  if(!qD){
+    c.innerHTML=`<div class="wsc"><div class="wsc-label">${step.label}</div><div style="text-align:center;padding:18px 0"><span style="font-size:2rem">⏭️</span><p style="font-size:0.78rem;font-weight:600;color:var(--muted2);margin-top:8px">Croqui não será incluído.</p><button class="wsc-opt" style="max-width:190px;margin:11px auto 0" onclick="decidirCroqui(true)">✏️ Mudei de ideia — desenhar</button></div></div>`;
+    return;
+  }
+  c.innerHTML=`<div class="wsc"><div class="wsc-label">${step.label}</div><div class="cq-tb"><button class="cq-btn" onclick="setCqModo('caneta')">🖊️</button><button class="cq-btn" onclick="setCqModo('texto')">🔤</button><button class="cq-btn" onclick="setCqModo('borracha')">🧹</button><span class="cq-sep"></span><button class="cq-btn" onclick="setCqCor('#1e3a5f')" style="background:#DBEAFE">🔵</button><button class="cq-btn" onclick="setCqCor('#DC2626')" style="background:#FEE2E2">🔴</button><button class="cq-btn" onclick="setCqCor('#16A34A')" style="background:#DCFCE7">🟢</button><button class="cq-btn" onclick="setCqCor('#000')">⚫</button><span class="cq-sep"></span><button class="cq-btn" onclick="setCqEsp(2)">▫️</button><button class="cq-btn" onclick="setCqEsp(4)">◽</button><button class="cq-btn" onclick="setCqEsp(8)">⬜</button><span class="cq-sep"></span><button class="cq-btn" onclick="desfazerCq()">↩</button><button class="cq-btn" onclick="limparCq()">🗑️</button></div><div id="cqTextoWrap" style="display:none;margin-bottom:6px"><input type="text" id="cqTextoInput" class="wsc-input" placeholder="Digite o texto e clique no canvas…" style="font-size:0.82rem"></div><div id="cqModoInd" style="font-size:0.56rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;text-align:right">Modo: Caneta</div><canvas id="croquiCanvas" style="width:100%;border-radius:9px;background:#fff;touch-action:none;cursor:crosshair;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06)"></canvas><button class="wsc-opt" style="margin-top:7px;max-width:190px;background:transparent;color:var(--error);font-size:0.68rem;box-shadow:inset 0 0 0 1.5px var(--error)" onclick="decidirCroqui(false)">✕ Descartar e pular</button></div>`;
+
+  setTimeout(()=>{
+    const cv=document.getElementById('croquiCanvas');
+    if(!cv) return;
+
+    /* Função reutilizável para (re)dimensionar o canvas */
+    function redimensionarCanvas(salvarConteudo=false){
+      let imagemAnterior=null;
+
+      /* Salva conteúdo atual antes de redimensionar */
+      if(salvarConteudo&&cqCtx&&cqC){
+        try{ imagemAnterior=cqC.toDataURL('image/png') }catch(e){}
+      }
+
+      const novaLargura=cv.offsetWidth||340;
+      const novaAltura=Math.round(novaLargura*0.58)||200;
+
+      /* Só redimensiona se realmente mudou */
+      if(cv.width===novaLargura&&cv.height===novaAltura) return;
+
+      cv.width=novaLargura;
+      cv.height=novaAltura;
+      cqC=cv;
+      cqCtx=cv.getContext('2d');
+
+      /* Restaura imagem anterior ou croqui salvo */
+      const srcRestaurar=imagemAnterior||WIZ.tempData.croquiData;
+      if(srcRestaurar){
+        const img=new Image();
+        img.onload=()=>{
+          cqCtx.drawImage(img,0,0,cv.width,cv.height);
+          /* Atualiza tempData com nova resolução */
+          WIZ.tempData.croquiData=cv.toDataURL('image/png');
+        };
+        img.src=srcRestaurar;
+      }
+    }
+
+    /* Inicialização */
+    cv.width=cv.offsetWidth||340;
+    cv.height=Math.round(cv.width*0.58)||200;
+    cqC=cv; cqCtx=cv.getContext('2d'); cqH=[]; cqModo='caneta';
+
+    if(WIZ.tempData.croquiData){
+      const img=new Image();
+      img.onload=()=>cqCtx.drawImage(img,0,0);
+      img.src=WIZ.tempData.croquiData;
+    }
+
+    /* ── ResizeObserver: detecta rotação e mudança de tamanho ── */
+    if(_croquiResizeObserver) _croquiResizeObserver.disconnect();
+    if(window.ResizeObserver){
+      _croquiResizeObserver=new ResizeObserver(entries=>{
+        for(const entry of entries){
+          const novaL=Math.round(entry.contentRect.width);
+          if(novaL>0&&novaL!==cqC?.width){
+            redimensionarCanvas(true);
+          }
+        }
+      });
+      _croquiResizeObserver.observe(cv.parentElement||cv);
+    }
+
+    /* Fallback: orientationchange para dispositivos que não suportam ResizeObserver */
+    const onOrientacao=()=>{ setTimeout(()=>redimensionarCanvas(true),300) };
+    window.addEventListener('orientationchange',onOrientacao);
+    /* Remove listener quando sair do step */
+    cv._removeOrientacao=()=>window.removeEventListener('orientationchange',onOrientacao);
+
+    cv.addEventListener('mousedown',cqStart);
+    cv.addEventListener('mousemove',cqMove);
+    cv.addEventListener('mouseup',cqEnd);
+    cv.addEventListener('mouseleave',cqEnd);
+    cv.addEventListener('touchstart',e=>{e.preventDefault();cqStart(e.touches[0])},{passive:false});
+    cv.addEventListener('touchmove',e=>{e.preventDefault();cqMove(e.touches[0])},{passive:false});
+    cv.addEventListener('touchend',cqEnd);
+  },100);
+}
+
+function decidirCroqui(sim){ WIZ.tempData._croquiDecisao=sim; if(!sim) WIZ.tempData.croquiData=null; renderWizard(); }
+function setCqModo(m){
+  cqModo=m;
+  const cv=document.getElementById('croquiCanvas');
+  const tw=document.getElementById('cqTextoWrap');
+  const ind=document.getElementById('cqModoInd');
+  const mn={caneta:'Caneta',texto:'Texto',borracha:'Borracha'};
+  if(ind) ind.textContent='Modo: '+(mn[m]||m);
+  if(cv) cv.style.cursor=m==='texto'?'text':m==='borracha'?'cell':'crosshair';
+  if(tw) tw.style.display=m==='texto'?'block':'none';
+}
+function getCqPos(e){
+  const r=cqC.getBoundingClientRect();
+  const sx=cqC.width/r.width, sy=cqC.height/r.height;
+  return{x:(e.clientX-r.left)*sx, y:(e.clientY-r.top)*sy};
+}
+function cqStart(e){
+  const p=getCqPos(e);
+  if(cqModo==='texto'){
+    const inp=document.getElementById('cqTextoInput');
+    const txt=inp?inp.value.trim():'';
+    if(!txt) return;
+    cqH.push(cqCtx.getImageData(0,0,cqC.width,cqC.height));
+    cqCtx.fillStyle=cqCor;
+    cqCtx.font=`${cqEsp*4+8}px Montserrat,sans-serif`;
+    cqCtx.fillText(txt,p.x,p.y);
+    WIZ.tempData.croquiData=cqC.toDataURL('image/png');
+    return;
+  }
+  cqDraw=true; cqX=p.x; cqY=p.y;
+  cqH.push(cqCtx.getImageData(0,0,cqC.width,cqC.height));
+}
+function cqMove(e){
+  if(!cqDraw) return;
+  const p=getCqPos(e);
+  cqCtx.beginPath();
+  if(cqModo==='borracha'){
+    cqCtx.globalCompositeOperation='destination-out';
+    cqCtx.lineWidth=cqEsp*6;
+  } else {
+    cqCtx.globalCompositeOperation='source-over';
+    cqCtx.strokeStyle=cqCor;
+    cqCtx.lineWidth=cqEsp;
+  }
+  cqCtx.lineCap='round';
+  cqCtx.moveTo(cqX,cqY); cqCtx.lineTo(p.x,p.y); cqCtx.stroke();
+  cqCtx.globalCompositeOperation='source-over';
+  cqX=p.x; cqY=p.y;
+}
+function cqEnd(){
+  if(!cqDraw) return;
+  cqDraw=false;
+  WIZ.tempData.croquiData=cqC.toDataURL('image/png');
+}
+function setCqCor(c){ cqCor=c; }
+function setCqEsp(e){ cqEsp=e; }
+function desfazerCq(){
+  if(!cqH.length) return;
+  cqCtx.putImageData(cqH.pop(),0,0);
+  WIZ.tempData.croquiData=cqC.toDataURL('image/png');
+}
+function limparCq(){
+  cqCtx.clearRect(0,0,cqC.width,cqC.height);
+  WIZ.tempData.croquiData=null;
+  cqH=[];
+}
+
+
+function renderStepFotos(c,step){
+  c.innerHTML=`<div class="wizard-step-card">
+    <div class="wizard-step-title">${step.label}</div>
+    <div class="wizard-question">${step.pergunta}</div>
+    <div class="fotos-grid" id="fotosGrid">
+      ${WIZ.tempData.fotos.map((f,i)=>`<div class="foto-thumb" onclick="removerFoto(${i})"><img src="${f}" alt="Foto ${i+1}"><div class="foto-del">✕</div></div>`).join('')}
+${WIZ.tempData.fotos.length<3?`<div class="foto-add" onclick="abrirMenuFoto()" title="Adicionar foto">
+        <span>＋</span><span style="font-size:0.6rem">Foto</span>
+      </div>`:''}
+    </div>
+
+    <!-- inputs ocultos separados: galeria e câmera -->
+    <input type="file" id="inputFotoGaleria" accept="image/*" multiple  style="display:none" onchange="adicionarFotos(this)">
+    <input type="file" id="inputFotoCamera"  accept="image/*" capture="environment" style="display:none" onchange="adicionarFotos(this)">
+
+    <!-- Menu de fonte (aparece ao clicar em +) -->
+    <div id="menuFontefoto" style="display:none;margin-top:10px;
+      background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);
+      border-radius:12px;padding:10px;
+      box-shadow:0 4px 20px rgba(13,110,253,0.14);
+      display:none;flex-direction:column;gap:8px">
+      <div style="font-size:0.6rem;font-weight:700;color:var(--primary);
+        text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px;text-align:center">
+        Escolha a origem da foto
+      </div>
+      <button class="wsc-opt" onclick="escolherFonteGaleria()" style="justify-content:center">
+        🖼️ Galeria de Imagens
+      </button>
+      <button class="wsc-opt" onclick="escolherFonteCamera()" style="justify-content:center">
+        📷 Câmera do Dispositivo
+      </button>
+      <button onclick="fecharMenuFoto()"
+        style="background:transparent;border:none;color:var(--muted);
+          font-size:0.72rem;font-weight:600;cursor:pointer;
+          font-family:inherit;padding:6px;border-radius:8px;margin-top:2px">
+        ✕ Cancelar
+      </button>
+    </div>
+
+<p class="num-helper" style="margin-top:9px">${step.helper}</p>
+    <div style="text-align:center;margin-top:7px;font-size:0.72rem;font-weight:700;color:var(--primary)">
+      ${WIZ.tempData.fotos.length>0
+        ?`✅ ${WIZ.tempData.fotos.length}/3 foto(s) adicionada(s)${WIZ.tempData.fotos.length>=3?' · limite atingido':''}`
+        :`📷 Fotos opcionais — até 3 por item (toque em + para adicionar)`}
+    </div>
+  </div>`;
+
+  if(_croquiResizeObserver){ _croquiResizeObserver.disconnect(); _croquiResizeObserver=null; }
+  const cvAntigo=document.getElementById('croquiCanvas');
+  if(cvAntigo?._removeOrientacao) cvAntigo._removeOrientacao();
+}
+
+function abrirMenuFoto(){
+  const menu=document.getElementById('menuFontefoto');
+  if(!menu) return;
+  menu.style.display = menu.style.display==='flex' ? 'none' : 'flex';
+  menu.style.flexDirection='column';
+}
+
+function fecharMenuFoto(){
+  const menu=document.getElementById('menuFontefoto');
+  if(menu) menu.style.display='none';
+}
+
+function escolherFonteGaleria(){
+  fecharMenuFoto();
+  document.getElementById('inputFotoGaleria')?.click();
+}
+
+function escolherFonteCamera(){
+  fecharMenuFoto();
+  document.getElementById('inputFotoCamera')?.click();
+}
+
+
+function comprimirFoto(file, qualidade=0.6, maxDim=1200){
+  return new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let {width:w,height:h}=img;
+        if(w>maxDim||h>maxDim){
+          if(w>h){h=Math.round(h*(maxDim/w));w=maxDim}
+          else{w=Math.round(w*(maxDim/h));h=maxDim}
+        }
+        const cv=document.createElement('canvas');
+        cv.width=w;cv.height=h;
+        const ctx=cv.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg',qualidade));
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function adicionarFotos(input){
+  const files=Array.from(input.files);
+  const LIMITE=3;
+  const vagas=LIMITE-WIZ.tempData.fotos.length;
+  if(vagas<=0){ showToast('Limite de 3 fotos por item atingido.','aviso',2500); input.value=''; return; }
+  const aceitos=files.slice(0,vagas);
+  if(files.length>vagas){ showToast(`Só cabem mais ${vagas} foto(s). As demais foram ignoradas.`,'aviso',3000); }
+  let processados=0;
+  aceitos.forEach(file=>{
+    comprimirFoto(file).then(base64=>{
+      WIZ.tempData.fotos.push(base64);
+      processados++;
+      if(processados===aceitos.length){
+        renderStepFotos(document.getElementById('wizardContent'),WIZ.steps[WIZ.etapa]);
+        const kb=Math.round(base64.length*0.75/1024);
+        showToast(`📷 ${aceitos.length} foto(s) adicionada(s) · ~${kb}KB/foto`,'ok',2000);
+      }
+    });
+  });
+  input.value='';
+}
+
+function renderStepRevisao(c,esq){
+  coletarStepAtual();
+  const cm=WIZ.tempData.contramarco, rb=WIZ.tempData.reboco, comp=WIZ.tempData.complementos;
+  const lados=WIZ.tempData.ladosMedicao||[];
+  const ehMulti=lados.length>0;
+  const inst=(comp.instalacao||'').toUpperCase();
+  const ehAlv=inst==='ALVENARIA';
+  // Nomes dinâmicos conforme instalação
+  const nomeCM=ehAlv?'Reboco Interno':'Contramarco';
+  const nomeRB=ehAlv?'Reboco Externo':'Reboco';
+  const EXCLUIR=['instalacao','fixoEmL','qtdLadosFixoL'];
+
+  const pendencias=[];
+  if(!WIZ.tempData.localizacao) pendencias.push('Localização da esquadria');
+
+  // Validação de medidas
+  if(ehMulti){
+    const largTotal=esq.largura||esq.larguraProjeto||0;
+    let somaL=0;
+    lados.forEach((l,i)=>{
+      ['L1','L2','L3','H1','H2','H3'].forEach(k=>{
+        if(!l.contramarco[k]||l.contramarco[k]==='0') pendencias.push(`Lado ${i+1} · ${nomeCM} ${k}`);
+        if(!l.reboco[k]||l.reboco[k]==='0')           pendencias.push(`Lado ${i+1} · ${nomeRB} ${k}`);
+      });
+      const valsL=Object.entries(l.contramarco).filter(([k])=>k.startsWith('L')).map(([,v])=>parseInt(v)).filter(v=>!isNaN(v)&&v>0);
+      if(valsL.length) somaL+=Math.min(...valsL);
+    });
+    if(largTotal&&somaL&&Math.abs(somaL-largTotal)>50)
+      pendencias.push(`Soma dos lados (${somaL}mm) difere ${Math.abs(somaL-largTotal)}mm do projeto (${largTotal}mm)`);
+  } else {
+    ['H1','H2','H3'].forEach(k=>{ if(!cm[k]||cm[k]==='0'||cm[k]==='') pendencias.push(`${nomeCM} ${k} (Altura)`); });
+    ['L1','L2','L3'].forEach(k=>{ if(!cm[k]||cm[k]==='0'||cm[k]==='') pendencias.push(`${nomeCM} ${k} (Largura)`); });
+    ['H1','H2','H3'].forEach(k=>{ if(!rb[k]||rb[k]==='0'||rb[k]==='') pendencias.push(`${nomeRB} ${k} (Altura)`); });
+    ['L1','L2','L3'].forEach(k=>{ if(!rb[k]||rb[k]==='0'||rb[k]==='') pendencias.push(`${nomeRB} ${k} (Largura)`); });
+  }
+
+  // Complementos obrigatórios
+  getComplementos(esq.tipoClassificado,esq.descricao||'')
+    .filter(f=>!EXCLUIR.includes(f.id))
+    .forEach(campo=>{
+      if(campo.tipo==='numero_na') return;
+      if(campo.tipo==='opcao_condicional'){ if((comp.instalacao||'')!=='Contramarco') return; }
+      const val=comp[campo.id];
+      if(!val&&val!==0) pendencias.push(campo.pergunta);
+    });
+
+  // Bloco de medidas para exibição na revisão
+  function blocoMedidas(){
+    if(ehMulti){
+      return lados.map((l,i)=>`
+        <div style="margin-bottom:10px">
+          <div style="font-size:0.6rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Lado ${i+1}</div>
+          <div class="rev-medidas-grid">
+            <div class="rev-col">
+              <div class="rev-col-header rev-col-h">↕ ALTURAS (H)</div>
+              <div class="rev-col-body">
+                <div class="rev-sub">${nomeCM.toUpperCase()}</div>
+                ${['H1','H2','H3'].map(k=>revLinha(k,l.contramarco[k],'mm')).join('')}
+                <div class="rev-sub" style="margin-top:7px">${nomeRB.toUpperCase()}</div>
+                ${['H1','H2','H3'].map(k=>revLinha(k,l.reboco[k],'mm')).join('')}
+              </div>
+            </div>
+            <div class="rev-col">
+              <div class="rev-col-header rev-col-l">↔ LARGURAS (L)</div>
+              <div class="rev-col-body">
+                <div class="rev-sub">${nomeCM.toUpperCase()}</div>
+                ${['L1','L2','L3'].map(k=>revLinha(k,l.contramarco[k],'mm')).join('')}
+                <div class="rev-sub" style="margin-top:7px">${nomeRB.toUpperCase()}</div>
+                ${['L1','L2','L3'].map(k=>revLinha(k,l.reboco[k],'mm')).join('')}
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+    return `<div class="rev-medidas-grid">
+      <div class="rev-col">
+        <div class="rev-col-header rev-col-h">↕ ALTURAS (H)</div>
+        <div class="rev-col-body">
+          <div class="rev-sub">${nomeCM.toUpperCase()}</div>
+          ${['H1','H2','H3'].map(k=>revLinha(k,cm[k],'mm')).join('')}
+          <div class="rev-sub" style="margin-top:7px">${nomeRB.toUpperCase()}</div>
+          ${['H1','H2','H3'].map(k=>revLinha(k,rb[k],'mm')).join('')}
+        </div>
+      </div>
+      <div class="rev-col">
+        <div class="rev-col-header rev-col-l">↔ LARGURAS (L)</div>
+        <div class="rev-col-body">
+          <div class="rev-sub">${nomeCM.toUpperCase()}</div>
+          ${['L1','L2','L3'].map(k=>revLinha(k,cm[k],'mm')).join('')}
+          <div class="rev-sub" style="margin-top:7px">${nomeRB.toUpperCase()}</div>
+          ${['L1','L2','L3'].map(k=>revLinha(k,rb[k],'mm')).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  c.innerHTML=`
+  <div class="wizard-step-card">
+    <div class="wizard-step-title">📋 Revisão Final</div>
+    <div class="wizard-question" style="font-size:0.82rem;margin-bottom:14px">Confira os dados antes de concluir</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px">📍 Localização</div>
+      <div style="font-size:0.85rem;font-weight:600;color:${WIZ.tempData.localizacao?'var(--text)':'#DC2626'}">${WIZ.tempData.localizacao||'⚠️ Não informada'}</div>
+    </div>
+    <div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">
+      📏 Medidas Coletadas${ehMulti?` — ${lados.length} lados`:''}
+    </div>
+    ${blocoMedidas()}
+    <div style="margin-bottom:12px;margin-top:12px">
+      <div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">🔧 Campos Complementares</div>
+      ${getComplementos(esq.tipoClassificado,esq.descricao||'').filter(f=>!EXCLUIR.includes(f.id)).map(campo=>{
+        const val=comp[campo.id];
+        const ok=val!==undefined&&val!==null&&val!=='';
+        return `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.73rem;border-bottom:1px solid rgba(0,0,0,0.04)"><span style="font-weight:500;color:var(--muted)">${campo.pergunta}</span><span style="font-weight:700;color:${ok?'var(--text)':'#DC2626'}">${ok?val:'⚠️ Pendente'}</span></div>`;
+      }).join('')}
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">📷 Fotos (${WIZ.tempData.fotos.length})</div>
+      ${WIZ.tempData.fotos.length>0?`<div class="fotos-grid">${WIZ.tempData.fotos.slice(0,6).map(f=>`<div class="foto-thumb"><img src="${f}" alt=""></div>`).join('')}</div>`:`<div style="font-size:0.75rem;color:var(--muted);font-weight:600">Nenhuma foto adicionada</div>`}
+    </div>
+    ${WIZ.tempData.croquiData?`<div style="margin-bottom:12px"><div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">✏️ Croqui</div><img src="${WIZ.tempData.croquiData}" style="width:100%;border-radius:8px"></div>`:''}
+    ${WIZ.tempData.observacaoGeral?`<div style="margin-bottom:12px"><div style="font-size:0.58rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px">📝 Observação</div><div style="font-size:0.78rem;color:var(--text);font-weight:500">${WIZ.tempData.observacaoGeral}</div></div>`:''}
+    ${pendencias.length>0
+      ?`<div style="background:#FEE2E2;border-radius:10px;padding:13px;margin-bottom:12px"><div style="font-size:0.78rem;font-weight:700;color:#991B1B;margin-bottom:8px">🚫 ${pendencias.length} campo(s) obrigatório(s) em aberto</div>${pendencias.map(p=>`<div style="font-size:0.7rem;font-weight:600;color:#7F1D1D;padding:2px 0">• ${p}</div>`).join('')}<div style="font-size:0.65rem;font-weight:600;color:#991B1B;margin-top:7px">Volte e preencha os campos acima.</div></div>`
+      :`<div style="background:#DCFCE7;border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;align-items:center;gap:9px;font-size:0.78rem;font-weight:700;color:#15803D"><span>✅</span><span>Todos os campos preenchidos — pronto para concluir!</span></div>`}
+  </div>`;
+}
+
+function revLinha(campo,valor,unidade){
+  const ok=valor&&valor!=='0'&&valor!=='';
+  return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.04);font-size:0.72rem"><span style="font-weight:600;color:var(--muted)">${campo}</span><span style="font-weight:700;color:${ok?'var(--text)':'#DC2626'}">${ok?valor+unidade:'⚠️ —'}</span></div>`;
+}
+
+function coletarStepAtual(){
+  const step=WIZ.steps[WIZ.etapa];
+  const input=document.getElementById('inputNumBig');
+  if(step.tipo==='numero'){
+    const val=input?input.value.trim():'';
+    // Só sobrescreve se o medidor digitou algo — nunca apaga valor existente com vazio
+    if(!val) return;
+    if(step.grupo&&step.grupo.startsWith('lado_')){
+      const idx=step.ladoIdx||0;
+      if(!WIZ.tempData.ladosMedicao) WIZ.tempData.ladosMedicao=[];
+      while(WIZ.tempData.ladosMedicao.length<=idx) WIZ.tempData.ladosMedicao.push({contramarco:{L1:'',L2:'',L3:'',H1:'',H2:'',H3:''},reboco:{L1:'',L2:'',L3:'',H1:'',H2:'',H3:''}});
+      const subGrupo=step.grupo.includes('_contramarco')?'contramarco':'reboco';
+      WIZ.tempData.ladosMedicao[idx][subGrupo][step.campo]=val;
+    } else if(step.grupo==='contramarco') WIZ.tempData.contramarco[step.campo]=val;
+    else if(step.grupo==='reboco')        WIZ.tempData.reboco[step.campo]=val;
+    else WIZ.tempData.complementos[step.id]=val;
+  }
+  if(step.tipo==='numero_na'){
+    const btnNA=document.getElementById('btnNA');
+    const isNA=btnNA&&btnNA.classList.contains('selected');
+    const val=input?input.value.trim():'';
+    // Só salva se o medidor interagiu (marcou N/A ou digitou algo)
+    if(isNA) WIZ.tempData.complementos[step.id]='N/A';
+    else if(val) WIZ.tempData.complementos[step.id]=val;
+  }
+  if(step.tipo==='localizacao'){
+    const i=document.getElementById('inputLocalizacao');
+    const val=i?i.value.trim():'';
+    if(val) WIZ.tempData.localizacao=val;
+  }
+  if(step.tipo==='observacao'){
+    const t=document.getElementById('inputObsGeral');
+    // Observação pode ser apagada intencionalmente — salva sempre
+    if(t) WIZ.tempData.observacaoGeral=t.value.trim();
+  }
+  if(step.tipo==='opcao'){
+    const sel=document.querySelector('#wizardContent .opt-btn.selected');
+    if(sel){
+      // Valor selecionado no DOM — salvar (pode ser clique novo ou restauração visual)
+      WIZ.tempData.complementos[step.id]=sel.textContent.trim();
+    }
+    // Se não há .selected mas já existe valor no tempData (restaurado), mantém — não apaga
+  }
+  if(step.tipo==='opcao_condicional'){
+    const sel=document.querySelector('#wizardContent .opt-btn.selected');
+    if(sel) WIZ.tempData.complementos[step.id]=sel.textContent.trim();
+  }
+}
+
+function validarStepAtual(){
+  const step=WIZ.steps[WIZ.etapa];
+  const esq=APP.esquadrias[WIZ.idx];
+  if(step.tipo==='localizacao'){ const i=document.getElementById('inputLocalizacao'); if(!i||!i.value.trim()){ mostrarErroStep('Informe a localização da esquadria para continuar.'); return false; } return true; }
+if(step.tipo==='numero'){
+    const input=document.getElementById('inputNumBig'); const valor=input?parseInt(input.value):0;
+    if(!input||!input.value||isNaN(valor)||valor<=0){ mostrarErroStep('Informe uma medida válida (maior que zero).'); return false; }
+    if(step.id==='espessura'){ const espMin=espessuraMinima(esq); if(valor<espMin){ mostrarErroStep(`Espessura mínima: ${espMin}mm. Informado: ${valor}mm. ${espMin===200?'⚠️ Porta de Correr Gold 4+ folhas exige ≥200mm.':'⚠️ Mínimo de 100mm.'}`); return false; } }
+    // Validação de divergência — NÃO aplicar a medidas de lados individuais
+    // (para multi-lados, a soma é validada apenas no concluirEsquadria)
+    const ehLado=step.grupo?.startsWith('lado_');
+    const ehCM=!ehLado&&(step.grupo==='contramarco'||step.grupo?.endsWith('_contramarco'));
+    const ehRB=!ehLado&&(step.grupo==='reboco'||step.grupo?.endsWith('_reboco'));
+    if(ehCM||ehRB){
+      const isAltura=String(step.campo||'').startsWith('H');
+      const projetado=isAltura?(esq.altura||esq.alturaProjeto||0):(esq.largura||esq.larguraProjeto||0);
+      const diff=projetado?Math.abs(valor-projetado):0;
+      const okDiv=WIZ.tempData._divOK&&WIZ.tempData._divOK[step.id];
+      if(projetado&&diff>=TOLERANCIA_PROJETO_MM&&!okDiv){ onNumericInput(input,step.campo,step.grupo,esq.largura||esq.larguraProjeto||0,esq.altura||esq.alturaProjeto||0); mostrarErroStep(`Medida diverge ${diff}mm do projeto (${projetado}mm). Toque em "DESEJA PROSSEGUIR?" para confirmar e avançar.`); return false; }
+    }
+    limparErroStep(); return true;
+  }
+  if(step.tipo==='numero_na'){ const btnNA=document.getElementById('btnNA'); const input=document.getElementById('inputNumBig'); const isNA=btnNA&&btnNA.classList.contains('selected'); const valor=input?parseInt(input.value):0; if(!isNA&&(!input||!input.value||isNaN(valor)||valor<=0)){ mostrarErroStep('Informe a medida ou selecione "N/A" para continuar.'); return false; } limparErroStep(); return true; }
+  if(step.tipo==='num_lados'){
+    const n=parseInt(WIZ.tempData.numLados)||0;
+    if(n<1){ mostrarErroStep('Informe quantos lados tem a esquadria.'); return false; }
+    limparErroStep(); return true;
+  }
+  if(step.tipo==='opcao'){
+    const sel=document.querySelector('#wizardContent .opt-btn.selected');
+    const valJaSalvo=WIZ.tempData.complementos[step.id]||WIZ.tempData.observacoes[step.id]||'';
+    // Bloqueia se: sem seleção no DOM E sem valor salvo anteriormente
+    if(!sel&&!valJaSalvo){ mostrarErroStep('Selecione uma das opções para continuar.'); return false; }
+    limparErroStep(); return true;
+  }
+  if(step.tipo==='opcao_condicional'){
+    const inst=WIZ.tempData.complementos['instalacao']||'';
+    if(inst==='Contramarco'){
+      const sel=document.querySelector('#wizardContent .opt-btn.selected');
+      const valJaSalvo=WIZ.tempData.complementos[step.id]||'';
+      if(!sel&&!valJaSalvo){ mostrarErroStep('Selecione uma das opções para continuar.'); return false; }
+    }
+    limparErroStep(); return true;
+  }
+if(step.tipo==='fotos'){ limparErroStep(); return true; }
+  limparErroStep(); return true;
+}
+
+function espessuraMinima(esq){ const desc=(esq.descricao||'').toUpperCase(); const tipo=(esq.tipoClassificado||'').toUpperCase(); const ehCorrer=tipo.includes('PORTA DE CORRER'); const ehGold=desc.includes('GOLD'); const qtdFolhas=extrairQtdFolhas(desc); if(ehCorrer&&ehGold&&qtdFolhas>=4) return 200; return 100; }
+function extrairQtdFolhas(desc){ const m=desc.match(/(\d+)\s*FOLHA/i); if(m) return parseInt(m[1]); return 1; }
+
+function mostrarErroStep(msg){
+  limparErroStep();
+  const el=document.createElement('div');
+  el.id='stepErroMsg';
+  el.innerHTML=`<span>🚫</span><span>${msg}</span>`;
+  el.style.cssText='background:#FEE2E2;border-left:3px solid #DC2626;border-radius:0 8px 8px 0;padding:10px 13px;margin-top:12px;font-size:0.75rem;font-weight:600;color:#991B1B;display:flex;align-items:flex-start;gap:7px;';
+  const card=document.querySelector('#wizardContent .wizard-step-card');
+  if(card){ card.appendChild(el); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+function limparErroStep(){ const el=document.getElementById('stepErroMsg'); if(el) el.remove(); }
+
+function wizProximo(){
+  const step=WIZ.steps[WIZ.etapa];
+  coletarStepAtual();
+  if(step.tipo==='revisao'){ concluirEsquadria(); return; }
+  if(!validarStepAtual()) return;
+
+  // ── Step de número de lados: inserir steps de medição por lado ──────
+  if(step.id==='numLados'){
+    const n=parseInt(WIZ.tempData.numLados)||2;
+    // Inicializar estrutura de medição por lados
+    if(!WIZ.tempData.ladosMedicao||WIZ.tempData.ladosMedicao.length!==n){
+      WIZ.tempData.ladosMedicao=Array.from({length:n},(_,i)=>({
+        contramarco:{L1:'',L2:'',L3:'',H1:'',H2:'',H3:''},
+        reboco:{L1:'',L2:'',L3:'',H1:'',H2:'',H3:''}
+      }));
+    }
+    // Remover placeholder e inserir steps de medição por lado
+    const phIdx=WIZ.steps.findIndex(s=>s.id==='_medicao_placeholder');
+    if(phIdx>=0){
+      const novosSteps=[];
+      // Instalação antes das medições
+      novosSteps.push({id:'instalacao',pergunta:'Forma de Instalação',tipo:'opcao',opcoes:['Contramarco','Alvenaria'],label:'Instalação'});
+      // Steps de medição por lado
+      stepsMultiLados(n).forEach(s=>novosSteps.push(s));
+      WIZ.steps.splice(phIdx,1,...novosSteps);
+    }
+    WIZ.etapa++; autoSalvar(); renderWizard(); return;
+  }
+
+  // ── Último lado: validar soma vs largura total ─────────────────────
+  if(step.tipo==='_placeholder'){ WIZ.etapa++; autoSalvar(); renderWizard(); return; }
+
+  if(WIZ.etapa<WIZ.steps.length-1){ WIZ.etapa++; autoSalvar(); renderWizard(); }
+}
+function wizAnterior(){ coletarStepAtual(); if(WIZ.etapa>0){ WIZ.etapa--; renderWizard(); } }
+function autoSalvar(){ const esq=APP.esquadrias[WIZ.idx]; esq._tempData=JSON.parse(JSON.stringify(WIZ.tempData)); salvarBackupLocal(); }
+
+function concluirEsquadria(){
+  coletarStepAtual();
+  const esq=APP.esquadrias[WIZ.idx];
+  const cm=WIZ.tempData.contramarco,rb=WIZ.tempData.reboco,comp=WIZ.tempData.complementos;
+  const pendencias=[];
+  if(!WIZ.tempData.localizacao) pendencias.push('Localização');
+
+  // Validação multi-lados: verificar preenchimento e soma
+  const lados=WIZ.tempData.ladosMedicao||[];
+  if(lados.length>0){
+    // Multi-lados: validar cada lado individualmente
+    const largTotal=esq.largura||esq.larguraProjeto||0;
+    let somaL=0;
+    lados.forEach((l,i)=>{
+      ['L1','L2','L3','H1','H2','H3'].forEach(k=>{
+        if(!l.contramarco[k]||l.contramarco[k]==='0') pendencias.push(`Lado ${i+1} · Contramarco ${k}`);
+        if(!l.reboco[k]||l.reboco[k]==='0')           pendencias.push(`Lado ${i+1} · Alvenaria ${k}`);
+      });
+      const valsL=Object.entries(l.contramarco).filter(([k])=>k.startsWith('L')).map(([,v])=>parseInt(v)).filter(v=>!isNaN(v)&&v>0);
+      if(valsL.length) somaL+=Math.min(...valsL);
+    });
+    if(largTotal&&somaL){
+      const diff=Math.abs(somaL-largTotal);
+      if(diff>50) pendencias.push(`Soma dos lados (${somaL}mm) difere em ${diff}mm do total do projeto (${largTotal}mm) — verifique!`);
+    }
+  } else {
+    // Esquadria simples: validar CM e reboco normalmente
+    ['H1','H2','H3'].forEach(k=>{ if(!cm[k]||cm[k]==='0'||cm[k]==='') pendencias.push(`Contramarco ${k} (Altura)`); });
+    ['L1','L2','L3'].forEach(k=>{ if(!cm[k]||cm[k]==='0'||cm[k]==='') pendencias.push(`Contramarco ${k} (Largura)`); });
+    ['H1','H2','H3'].forEach(k=>{ if(!rb[k]||rb[k]==='0'||rb[k]==='') pendencias.push(`Reboco ${k} (Altura)`); });
+    ['L1','L2','L3'].forEach(k=>{ if(!rb[k]||rb[k]==='0'||rb[k]==='') pendencias.push(`Reboco ${k} (Largura)`); });
+    // Complementos obrigatórios (exclui campos controlados pelo wizard de lados)
+    const EXCLUIR=['instalacao','fixoEmL','qtdLadosFixoL'];
+    getComplementos(esq.tipoClassificado,esq.descricao||'')
+      .filter(c=>!EXCLUIR.includes(c.id))
+      .forEach(campo=>{
+        if(campo.tipo==='numero_na') return;
+        if(campo.tipo==='opcao_condicional'){ if((comp['instalacao']||'')!=='Contramarco') return; }
+        const val=comp[campo.id];
+        if(val===undefined||val===null||val==='') pendencias.push(campo.pergunta);
+      });
+  }
+  if(pendencias.length>0){ showToast(`⚠️ ${pendencias.length} campo(s) obrigatório(s) pendente(s)!`,'aviso',5000); return; }
+  Object.assign(esq,{ contramarco:{...WIZ.tempData.contramarco}, reboco:{...WIZ.tempData.reboco}, complementos:{...WIZ.tempData.complementos}, observacoes:{...WIZ.tempData.observacoes}, localizacao:WIZ.tempData.localizacao, responsavel:WIZ.tempData.responsavel, fotos:[...WIZ.tempData.fotos], croquiData:WIZ.tempData.croquiData, observacaoGeral:WIZ.tempData.observacaoGeral,
+    // Multi-lados
+    multiLados:lados.length>0,
+    numLados:WIZ.tempData.numLados||null,
+    ladosMedicao:lados.length>0?lados:undefined,
+    status:'concluida', validacao:calcularValidacao(esq), _tempData:null });
+  salvarBackupLocal();
+  showToast(`✅ ${esq.codigo||'Esquadria'} concluída com sucesso!`,'ok');
+  setTimeout(()=>{ renderLista(); showScreen('screen-lista'); },500);
+}
+
+function salvarBackupLocal(){
+  try{ if(!APP.obra) return; localStorage.setItem('maxibell_autosave',JSON.stringify({...APP.obra,esquadrias:APP.esquadrias,finalizada:APP.finalizada,backupDate:new Date().toISOString()})); }catch(e){ console.warn('AutoSave falhou:',e); }
+}
+
+function abrirWizard(idx){ iniciarWizard(idx); }
+
+/* CSS PARTE 3 */
+(function injetarCSS(){
+  const s=document.createElement('style');
+  s.textContent=`
+  .wizard-step-card{
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(12px);
+    border-radius:14px;
+    padding:20px 16px 22px;
+    box-shadow:0 2px 16px rgba(13,110,253,0.06);
+    margin-bottom:14px;
+  }
+  .wizard-step-title{
+    font-size:0.58rem;font-weight:700;color:var(--primary);
+    text-transform:uppercase;letter-spacing:0.8px;
+    margin-bottom:9px;opacity:0.8;
+  }
+  .wizard-question{
+    font-size:1rem;font-weight:700;color:var(--text);
+    margin-bottom:16px;line-height:1.4;
+  }
+  .num-input-wrap{
+    display:flex;align-items:center;gap:9px;
+    justify-content:center;margin:9px 0 5px;
+  }
+  .num-input-big{
+    font-size:2.2rem;font-weight:800;color:var(--text);
+    background:var(--input-blue);
+    border:1.5px solid var(--input-border-blue);
+    border-radius:12px;padding:9px 16px;
+    text-align:center;width:170px;outline:none;
+    transition:border-color .18s;
+  }
+  .num-input-big:focus{border-color:var(--primary);}
+  .num-unit{font-size:1rem;font-weight:700;color:var(--primary);opacity:0.6;}
+  .num-helper{font-size:0.68rem;color:#94a3b8;text-align:center;margin-top:5px;}
+  .opcoes-wrap{display:flex;flex-direction:column;gap:8px;margin-top:5px;}
+  .opt-btn{
+    background:rgba(255,255,255,0.6);
+    border:none;
+    box-shadow:inset 0 0 0 1.5px var(--input-border-blue);
+    border-radius:10px;padding:13px 16px;
+    font-size:0.9rem;font-weight:600;color:var(--text);
+    cursor:pointer;text-align:left;
+    transition:all .16s;display:flex;align-items:center;gap:9px;
+    font-family:inherit;
+  }
+  .opt-btn:hover{box-shadow:inset 0 0 0 1.5px var(--primary);background:rgba(13,110,253,0.05);}
+  .opt-btn.selected{background:var(--primary);box-shadow:none;color:#fff;}
+
+  /* ── TOOLBAR DO CROQUI ── */
+  .cq-tb{
+    display:flex;flex-wrap:wrap;gap:5px;
+    margin-bottom:9px;
+    background:rgba(255,255,255,0.55);
+    border-radius:10px;
+    padding:7px 8px;
+    box-shadow:0 1px 6px rgba(0,0,0,0.06);
+  }
+  .cq-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.75);
+    box-shadow:0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.07);
+    border:none;
+    border-radius:8px;
+    padding:7px 11px;
+    font-size:1rem;
+    cursor:pointer;
+    transition:background 0.14s, transform 0.1s, box-shadow 0.14s;
+    font-family:inherit;
+    min-width:36px;
+    min-height:36px;
+  }
+  .cq-btn:hover{
+    background:rgba(13,110,253,0.10);
+    box-shadow:0 2px 8px rgba(13,110,253,0.15), inset 0 0 0 1.5px var(--primary);
+    transform:translateY(-1px);
+  }
+  .cq-btn:active{transform:scale(0.94);}
+  .cq-sep{
+    width:1px;
+    background:rgba(0,0,0,0.10);
+    border-radius:2px;
+    margin:3px 2px;
+    align-self:stretch;
+    display:inline-block;
+  }
+
+  /* ── WIZARD STEP CROQUI ── */
+  .wsc{
+    background:rgba(255,255,255,0.55);
+    backdrop-filter:blur(12px);
+    border-radius:14px;
+    padding:20px 16px 22px;
+    box-shadow:0 2px 16px rgba(13,110,253,0.06);
+    margin-bottom:14px;
+  }
+  .wsc-label{
+    font-size:0.58rem;font-weight:700;color:var(--primary);
+    text-transform:uppercase;letter-spacing:0.8px;
+    margin-bottom:9px;opacity:0.8;
+  }
+  .wsc-q{
+    font-size:1rem;font-weight:700;color:var(--text);
+    margin-bottom:18px;line-height:1.4;
+  }
+  .wsc-opts{
+    display:flex;flex-direction:column;gap:9px;
+  }
+  .wsc-opt{
+    background:rgba(255,255,255,0.6);
+    box-shadow:inset 0 0 0 1.5px var(--input-border-blue);
+    border:none;border-radius:10px;
+    padding:13px 16px;font-size:0.88rem;font-weight:600;
+    color:var(--text);cursor:pointer;text-align:left;
+    transition:all .16s;font-family:inherit;
+    display:flex;align-items:center;gap:9px;
+  }
+  .wsc-opt:hover{
+    box-shadow:inset 0 0 0 1.5px var(--primary);
+    background:rgba(13,110,253,0.05);
+  }
+   .wsc-input{
+    width:100%;box-sizing:border-box;
+    background:var(--input-blue);
+    border:1.5px solid var(--input-border-blue);
+    border-radius:9px;padding:10px 13px;
+    font-size:0.85rem;font-weight:600;color:var(--text);
+    outline:none;font-family:inherit;
+    transition:border-color .18s;
+    text-transform:uppercase;
+  }
+  .wsc-input::placeholder{text-transform:none;}
+  .wsc-input:focus{border-color:var(--primary);}
+
+
+  .fotos-grid{
+display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:5px;}
+  .foto-thumb{position:relative;border-radius:9px;overflow:hidden;aspect-ratio:1;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.07);}
+  .foto-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .foto-del{position:absolute;top:3px;right:3px;background:rgba(220,38,38,0.82);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:900;}
+  .foto-add{border-radius:9px;box-shadow:inset 0 0 0 1.5px var(--input-border-blue);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--primary);font-size:1.4rem;background:var(--input-blue);transition:background .14s;}
+  .foto-add:hover{background:rgba(13,110,253,0.07);}
+  .rev-medidas-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px;}
+  .rev-col{border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.6);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);}
+  .rev-col-header{padding:7px 11px;font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;}
+  .rev-col-h{background:rgba(13,110,253,0.06);color:var(--primary);}
+  .rev-col-l{background:rgba(22,163,74,0.06);color:#15803D;}
+  .rev-col-body{padding:9px 11px;}
+  .rev-sub{font-size:0.54rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:#94a3b8;margin-bottom:3px;}
+  .input-field{width:100%;box-sizing:border-box;background:var(--input-blue);border:1.5px solid var(--input-border-blue);border-radius:9px;padding:11px 13px;font-size:0.9rem;font-weight:600;color:var(--text);outline:none;transition:border-color .18s;font-family:inherit;text-transform:uppercase;}
+  .input-field::placeholder{text-transform:none;}
+  .input-field:focus{border-color:var(--primary);}
+
+  `;
+  document.head.appendChild(s);
+})();
+
+</script>
+<style>
+/* ── ALERTAS ─────────────────────────────────── */
+.alerta-parede{
+  background:linear-gradient(135deg,#1a0000,#3a0000);
+  border-left:3px solid #DC2626;
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:10px;
+}
+.alerta-parede .alerta-titulo{
+  color:#FCA5A5;font-size:0.8rem;
+  font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;gap:7px;
+}
+.alerta-parede .alerta-linha{
+  display:flex;justify-content:space-between;
+  padding:4px 0;
+  font-size:0.72rem;
+}
+.alerta-parede .alerta-linha span:first-child{color:#FCA5A5;font-weight:500}
+.alerta-parede .alerta-linha span:last-child{color:#FF6B6B;font-weight:700}
+.alerta-parede .alerta-critico{
+  color:#FF2020;font-size:0.75rem;font-weight:700;
+  margin-top:8px;text-align:center;
+  background:rgba(220,38,38,0.18);border-radius:6px;padding:7px;
+}
+
+.alerta-cantoneira{
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);
+  border-left:3px solid #F59E0B;
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:10px;
+}
+.alerta-cantoneira .alerta-titulo{
+  color:#92400E;font-size:0.8rem;
+  font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;gap:7px;
+}
+.alerta-cantoneira .alerta-linha{
+  display:flex;justify-content:space-between;
+  padding:4px 0;font-size:0.72rem;
+}
+.alerta-cantoneira .alerta-linha span:first-child{color:#78350f;font-weight:500}
+.alerta-cantoneira .alerta-linha span:last-child{color:#92400E;font-weight:700}
+
+.alerta-pu{
+  background:linear-gradient(135deg,#fff7ed,#ffedd5);
+  border-left:3px solid #EA580C;
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:10px;
+}
+.alerta-pu .alerta-titulo{
+  color:#9A3412;font-size:0.8rem;
+  font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;gap:7px;
+}
+.alerta-pu .alerta-linha{
+  display:flex;justify-content:space-between;
+  padding:4px 0;font-size:0.72rem;
+}
+.alerta-pu .alerta-linha span:first-child{color:#7C2D12;font-weight:500}
+.alerta-pu .alerta-linha span:last-child{color:#9A3412;font-weight:700}
+
+.alerta-ok{
+  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+  border-left:3px solid #16A34A;
+  border-radius:10px;
+  padding:13px 16px;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.alerta-ok .alerta-icone{font-size:1.2rem}
+.alerta-ok .alerta-texto{font-size:0.78rem;font-weight:600;color:#15803D;}
+
+/* ── CARD CANTONEIRAS ─── */
+.card-cantoneiras{
+  background:rgba(239,246,255,0.65);
+  backdrop-filter:blur(8px);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:10px;
+  box-shadow:inset 0 0 0 1px rgba(147,197,253,0.5);
+}
+.card-cant-title{
+  font-size:0.72rem;font-weight:700;
+  color:var(--primary);margin-bottom:12px;
+  display:flex;align-items:center;gap:7px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(147,197,253,0.3);
+}
+.card-cant-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.card-cant-col{
+  background:rgba(255,255,255,0.65);
+  border-radius:9px;padding:12px;
+}
+.card-cant-col-title{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#1D4ED8;margin-bottom:7px;}
+.card-cant-row{display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;}
+.card-cant-row span:first-child{color:var(--muted);font-weight:500}
+.card-cant-row span:last-child{font-weight:700;color:var(--text)}
+.card-cant-result{margin-top:8px;padding:8px;border-radius:7px;font-size:0.78rem;font-weight:700;text-align:center;}
+.cant-result-ok{background:#DCFCE7;color:#15803D}
+.cant-result-w{background:#FEF3C7;color:#92400E}
+.cant-result-pu{background:#FEF3C7;color:#C2410C}
+.cant-result-crit{background:#FEE2E2;color:#991B1B}
+</style>
+
+<script>
+function pFloat(v){ return parseFloat(String(v||'0').replace(',','.')) || 0; }
+
+function calcularValidacao(esq){
+  const cm=esq.contramarco||{},rb=esq.reboco||{};
+  const cH=[pFloat(cm.H1),pFloat(cm.H2),pFloat(cm.H3)].filter(v=>v>0);
+  const cL=[pFloat(cm.L1),pFloat(cm.L2),pFloat(cm.L3)].filter(v=>v>0);
+  const rH=[pFloat(rb.H1),pFloat(rb.H2),pFloat(rb.H3)].filter(v=>v>0);
+  const rL=[pFloat(rb.L1),pFloat(rb.L2),pFloat(rb.L3)].filter(v=>v>0);
+  if(!cH.length||!rH.length) return null;
+  const minCH=Math.min(...cH),minCL=cL.length?Math.min(...cL):0;
+  const minRH=Math.min(...rH),maxRH=Math.max(...rH);
+  const minRL=rL.length?Math.min(...rL):0,maxRL=rL.length?Math.max(...rL):0;
+  const esqH=minCH-3,esqL=minCL-4,divL=(maxRL-esqL)/2;
+  let statusH,dadosH={};
+  if(esqH>minRH){ statusH='PAREDE_FECHANDO'; dadosH={esqH,minRH,minCH,diferenca:esqH-minRH}; }
+  else{ const diffH=maxRH-esqH; if(diffH>=5){ statusH='CANTONEIRA'; dadosH={esqH,minCH,maxRH,diferenca:diffH,cantoneira:tabCantoneira(diffH)}; } else{ statusH='OK'; dadosH={esqH,minCH,maxRH,diferenca:diffH}; } }
+  let statusL,dadosL={};
+  if(!cL.length||!rL.length){ statusL='SEM_DADOS'; dadosL={}; }
+  else if(esqL>minRL){ statusL='PAREDE_FECHANDO'; dadosL={esqL,minRL,minCL,diferenca:esqL-minRL}; }
+  else{ const diffL=maxRL-esqL; if(diffL>=5){ if(divL<3){ statusL='PU'; dadosL={esqL,minCL,maxRL,diferencaTotal:diffL,gretaLado:divL.toFixed(1)}; } else{ statusL='CANTONEIRA'; dadosL={esqL,minCL,maxRL,diferencaTotal:diffL,divisao:divL,cantoneira:tabCantoneira(divL)}; } } else{ statusL='OK'; dadosL={esqL,minCL,maxRL,diferenca:diffL}; } }
+  return{statusH,dadosH,statusL,dadosL,minCH,minCL,minRH,maxRH,minRL,maxRL};
+}
+
+function tabCantoneira(mm){ if(mm<=15) return 'CANTONEIRA 15×15mm'; if(mm<=20) return 'CANTONEIRA 20×20mm'; if(mm<=25) return 'CANTONEIRA 25×25mm'; return 'A CRITÉRIO DO PROJETISTA'; }
+
+function renderValidacaoNoStep(val,container){
+  if(!container) return;
+  if(!val){ container.innerHTML='<p style="font-size:0.72rem;color:#94a3b8">Dados insuficientes para validação.</p>'; return; }
+  let html='';
+  if(val.statusH==='PAREDE_FECHANDO'){
+    html+=`<div class="alerta-parede"><div class="alerta-titulo">🚨 PAREDE FECHANDO EM ALTURA!</div><div class="alerta-linha"><span>Medida real da esquadria</span><span>${val.dadosH.esqH}mm (${val.dadosH.minCH}mm − 3mm)</span></div><div class="alerta-linha"><span>Menor vão de reboco</span><span>${val.dadosH.minRH}mm</span></div><div class="alerta-linha"><span>Diferença crítica</span><span>${val.dadosH.diferenca}mm</span></div><div class="alerta-critico">⚠ A esquadria NÃO entra no vão — VERIFICAR URGENTE!</div></div>`;
+  } else if(val.statusH==='CANTONEIRA'){
+    html+=`<div class="alerta-cantoneira"><div class="alerta-titulo">⚠️ CANTONEIRA NECESSÁRIA — ALTURA</div><div class="alerta-linha"><span>Menor Contramarco H</span><span>${val.dadosH.minCH}mm</span></div><div class="alerta-linha"><span>Folga de altura</span><span>3mm</span></div><div class="alerta-linha"><span>Medida real da esquadria</span><span>${val.dadosH.esqH}mm</span></div><div class="alerta-linha"><span>Maior Reboco H</span><span>${val.dadosH.maxRH}mm</span></div><div class="alerta-linha"><span>Diferença final</span><span><strong>${val.dadosH.diferenca}mm</strong></span></div><div style="margin-top:8px;text-align:center"><span class="chip chip-orange" style="font-size:0.76rem;padding:5px 12px">→ ${val.dadosH.cantoneira}</span></div></div>`;
+  } else if(val.statusH==='OK'){
+    html+=`<div class="alerta-ok"><span class="alerta-icone">✅</span><span class="alerta-texto">ALTURA — Medidas dentro dos parâmetros — instalação aprovada</span></div>`;
+  }
+  if(val.statusL==='PAREDE_FECHANDO'){
+    html+=`<div class="alerta-parede"><div class="alerta-titulo">🚨 PAREDE FECHANDO EM LARGURA!</div><div class="alerta-linha"><span>Medida real da esquadria</span><span>${val.dadosL.esqL}mm (${val.dadosL.minCL}mm − 4mm)</span></div><div class="alerta-linha"><span>Menor vão de reboco</span><span>${val.dadosL.minRL}mm</span></div><div class="alerta-linha"><span>Diferença crítica</span><span>${val.dadosL.diferenca}mm</span></div><div class="alerta-critico">⚠ A esquadria NÃO entra no vão — VERIFICAR URGENTE!</div></div>`;
+  } else if(val.statusL==='PU'){
+    html+=`<div class="alerta-pu"><div class="alerta-titulo">🔶 PREENCHER COM PU — LARGURA</div><div class="alerta-linha"><span>Menor Contramarco L</span><span>${val.dadosL.minCL}mm</span></div><div class="alerta-linha"><span>Folga de largura</span><span>4mm</span></div><div class="alerta-linha"><span>Medida real da esquadria</span><span>${val.dadosL.esqL}mm</span></div><div class="alerta-linha"><span>Maior Reboco L</span><span>${val.dadosL.maxRL}mm</span></div><div class="alerta-linha"><span>Diferença total</span><span>${val.dadosL.diferencaTotal}mm</span></div><div class="alerta-linha"><span>Greta por lado</span><span><strong>${val.dadosL.gretaLado}mm</strong></span></div><div style="margin-top:8px;text-align:center;font-size:0.76rem;font-weight:700;color:#9A3412">✏️ Preencher greta com PU — ${val.dadosL.gretaLado}mm por lado</div></div>`;
+  } else if(val.statusL==='CANTONEIRA'){
+    html+=`<div class="alerta-cantoneira"><div class="alerta-titulo">⚠️ CANTONEIRA NECESSÁRIA — LARGURA</div><div class="alerta-linha"><span>Menor Contramarco L</span><span>${val.dadosL.minCL}mm</span></div><div class="alerta-linha"><span>Folga de largura</span><span>4mm</span></div><div class="alerta-linha"><span>Medida real da esquadria</span><span>${val.dadosL.esqL}mm</span></div><div class="alerta-linha"><span>Maior Reboco L</span><span>${val.dadosL.maxRL}mm</span></div><div class="alerta-linha"><span>Diferença final total</span><span>${val.dadosL.diferencaTotal}mm</span></div><div class="alerta-linha"><span>Diferença por lado</span><span><strong>${val.dadosL.divisao.toFixed(1)}mm</strong></span></div><div style="margin-top:8px;text-align:center"><span class="chip chip-orange" style="font-size:0.76rem;padding:5px 12px">→ ${val.dadosL.cantoneira}</span></div></div>`;
+  } else if(val.statusL==='OK'){
+    html+=`<div class="alerta-ok"><span class="alerta-icone">✅</span><span class="alerta-texto">LARGURA — Medidas dentro dos parâmetros — instalação aprovada</span></div>`;
+  }
+  const temCantH=val.statusH==='CANTONEIRA',temCantL=val.statusL==='CANTONEIRA',temPU=val.statusL==='PU';
+  if(temCantH||temCantL||temPU){
+    const single=[temCantH,temCantL,temPU].filter(Boolean).length===1;
+    html+=`<div class="card-cantoneiras"><div class="card-cant-title">🔧 CANTONEIRAS / ACABAMENTO INDICADO</div><div class="card-cant-grid" style="${single?'grid-template-columns:1fr':''}">`;
+    if(temCantH) html+=`<div class="card-cant-col"><div class="card-cant-col-title">↕ ALTURA</div><div class="card-cant-row"><span>Diferença</span><span>${val.dadosH.diferenca}mm</span></div><div class="card-cant-result cant-result-w">⚠️ ${val.dadosH.cantoneira}</div></div>`;
+    if(temCantL) html+=`<div class="card-cant-col"><div class="card-cant-col-title">↔ LARGURA</div><div class="card-cant-row"><span>Diferença total</span><span>${val.dadosL.diferencaTotal}mm</span></div><div class="card-cant-row"><span>Por lado</span><span>${val.dadosL.divisao.toFixed(1)}mm</span></div><div class="card-cant-result cant-result-w">⚠️ ${val.dadosL.cantoneira}</div></div>`;
+    if(temPU) html+=`<div class="card-cant-col"><div class="card-cant-col-title">↔ LARGURA — PU</div><div class="card-cant-row"><span>Diferença total</span><span>${val.dadosL.diferencaTotal}mm</span></div><div class="card-cant-row"><span>Greta por lado</span><span>${val.dadosL.gretaLado}mm</span></div><div class="card-cant-result cant-result-pu">🔶 PREENCHER COM PU<br>${val.dadosL.gretaLado}mm por lado</div></div>`;
+    html+=`</div></div>`;
+  }
+  container.innerHTML=html||'<p style="font-size:0.72rem;color:#94a3b8">Validação não disponível.</p>';
+}
+</script>
+<style>
+#screen-finalizacao{ display:none }
+#screen-finalizacao.active{ display:block }
+
+.final-hero{ text-align:center;padding:24px 16px 18px; }
+.final-hero .final-icon{ font-size:3.5rem;margin-bottom:10px;display:block;animation:bounce 0.5s ease; }
+@keyframes bounce{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+.final-hero h2{ font-size:1.2rem;font-weight:700;margin-bottom:5px; }
+.final-hero p{ font-size:0.78rem;color:var(--muted);font-weight:500; }
+
+.resumo-obra-final{ display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px; }
+
+.esq-resumo-card{
+  background:rgba(255,255,255,0.5);
+  border-radius:11px;
+  padding:13px;
+  margin-bottom:8px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.05);
+}
+.esq-resumo-header{ display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
+.esq-resumo-codigo{ font-weight:700;font-size:0.85rem; }
+.esq-resumo-tipo{ font-size:0.64rem;font-weight:600;color:var(--primary);margin-bottom:5px; }
+
+/* ===== Pista visual: REBOCO = fundo bege/marrom · CONTRAMARCO = neutro ===== */
+.wizard-step-card.step-reboco{
+  background:linear-gradient(180deg,#F3E9D8,#EAD9BE)!important;
+  border:1px solid #D8C49A!important;
+  box-shadow:inset 0 0 0 1px rgba(180,140,80,0.15),0 6px 22px rgba(120,90,40,0.10)!important;
+}
+.wizard-step-card.step-reboco .wizard-step-title{ color:#7A5A1E!important; }
+.wizard-step-card.step-reboco .num-input-big{ background:rgba(255,255,255,0.65)!important; }
+.wizard-step-card.step-reboco::before{
+  content:"🧱 MEDINDO REBOCO";
+  display:block;font-size:0.64rem;font-weight:800;letter-spacing:0.6px;
+  color:#8A5A12;background:rgba(255,255,255,0.5);
+  border-radius:7px;padding:5px 9px;margin-bottom:10px;text-align:center;
+}
+.wizard-step-card.step-contramarco::before{
+  content:"🪟 MEDINDO CONTRAMARCO";
+  display:block;font-size:0.64rem;font-weight:800;letter-spacing:0.6px;
+  color:#0C4A6E;background:rgba(13,110,253,0.07);
+  border-radius:7px;padding:5px 9px;margin-bottom:10px;text-align:center;
+}
+
+@media print{
+  .app-header,.wizard-nav,.btn,.toast-container,.loading-overlay{display:none!important}
+  body{background:#fff!important;font-size:11px}
+  .glass-card{box-shadow:none!important;break-inside:avoid;page-break-inside:avoid}
+  .screen{display:block!important}
+  #screen-import,#screen-resumo,#screen-lista,#screen-wizard{display:none!important}
+  #screen-finalizacao{display:block!important}
+  .alerta-parede{background:#fee2e2!important;color:#7f1d1d!important}
+  .card-cantoneiras{background:#eff6ff!important}
+}
+</style>
+
+<script>
+(function injetarTelaFinal(){
+  const w=document.getElementById('screen-finalizacao-wrapper');
+  w.innerHTML=`
+  <div class="screen" id="screen-finalizacao">
+<div class="glass-card elevated">
+      <div class="final-hero">
+        <span class="final-icon">🏆</span>
+        <h2>Obra Finalizada!</h2>
+        <p id="finalDesc">Todas as esquadrias foram medidas com sucesso.</p>
+      </div>
+      <div class="resumo-obra-final" id="finalObraInfo" style="grid-template-columns:1fr 1fr"></div>
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-primary btn-full btn-lg" onclick="enviarJSONWhatsApp()">📤 Baixar / Enviar JSON</button>
+        <button class="btn btn-ghost btn-full" style="font-size:0.85rem" onclick="confirmarNovaObra()">🔄 Nova Obra</button>
+      </div>
+    </div>
+  </div>`;
+
+})();
+
+
+function novaObra(){
+  APP.obra=null; APP.esquadrias=[]; APP.finalizada=false;
+  try{document.getElementById('nomeMedidor').value='';}catch(e){}
+  try{document.getElementById('fileInput').value='';}catch(e){}
+  const hc=document.getElementById('headerCenter');
+  if(hc) hc.style.display='none';
+  showScreen('screen-import');
+  showToast('✅ Pronto para nova obra!','info');
+}
+
+function voltarTelaImportAposDownload(){
+  APP.obra=null;
+  APP.esquadrias=[];
+  APP.finalizada=false;
+  WIZ.idx=0; WIZ.etapa=0; WIZ.steps=[];
+  WIZ.tempData={contramarco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},reboco:{H1:'',H2:'',H3:'',L1:'',L2:'',L3:''},complementos:{},observacoes:{},localizacao:'',responsavel:'',fotos:[],croquiData:null,observacaoGeral:''};
+  try{document.getElementById('nomeMedidor').value='';}catch(e){}
+  try{document.getElementById('fileInput').value='';}catch(e){}
+  localStorage.removeItem('maxibell_autosave');
+  const hc=document.getElementById('headerCenter');
+  if(hc) hc.style.display='none';
+  document.getElementById('headerBadge').textContent='v2.0';
+  document.getElementById('headerSubtitle').textContent='Sistema de Medição';
+  document.body.classList.remove('side-open');
+  const nav=document.getElementById('sideNav');
+  if(nav) nav.classList.remove('visible','mobile-open');
+  showScreen('screen-import');
+  showToast('✅ Medição concluída! Pronto para nova obra.','ok',4000);
+}
+
+
+function finalizarObra(){
+  APP.finalizada=true;
+  const obra=APP.obra;
+  document.getElementById('finalDesc').textContent=`${APP.esquadrias.length} esquadria(s) concluídas · ${obra.medidor||''} · ${obra.dataMedicao||''}`;
+  const info=document.getElementById('finalObraInfo');
+  if(info){ info.innerHTML=[['Proposta',obra.proposta],['Cliente',obra.cliente],['Cidade',obra.cidade],['Medidor',obra.medidor]].map(([l,v])=>`<div class="info-item"><label>${l}</label><div class="value" style="font-size:0.82rem">${v||'—'}</div></div>`).join(''); }
+  salvarBackupLocal();
+  showScreen('screen-finalizacao');
+  showToast('Obra finalizada! Toque em "Baixar / Enviar JSON".','ok',4000);
+  // Abre automaticamente a bandeja de compartilhamento (Web Share)
+  setTimeout(()=>{ enviarJSONWhatsApp(); }, 600);
+}
+
+function enviarJSONWhatsApp(){
+  const data=montarJSONFinal();
+  const nome=nomeArquivoJSON(data);
+  const conteudo=JSON.stringify(data,null,2);
+  const blob=new Blob([conteudo],{type:'application/json'});
+  const file=new File([blob],nome,{type:'application/json'});
+  const legenda=`Medição ${data.proposta||''} · ${data.cliente||''} · ${data.cidade||''}`.trim();
+  // 1) Web Share API com arquivo: abre WhatsApp e demais apps no tablet
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:nome,text:legenda})
+      .then(()=>showToast('Compartilhamento aberto. Escolha o WhatsApp.','ok'))
+      .catch(()=>{ baixarJSONDireto(blob,nome); });
+    return;
+  }
+  // 2) Fallback: baixa o arquivo e abre a conversa do WhatsApp no número da Maxibell
+  baixarJSONDireto(blob,nome);
+  showToast('Arquivo baixado. Abrindo WhatsApp para anexar…','info',4000);
+  setTimeout(()=>{ window.open('https://wa.me/5535933001199?text='+encodeURIComponent(legenda+' — segue o arquivo da medição em anexo.'),'_blank'); }, 800);
+}
+
+function baixarJSONDireto(blob,nome){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=nome; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function obterStatusGeral(val){
+  if(!val) return '—';
+  if(val.statusH==='PAREDE_FECHANDO'||val.statusL==='PAREDE_FECHANDO') return '🚨';
+  if(val.statusH==='CANTONEIRA'||val.statusL==='CANTONEIRA') return '⚠️';
+  if(val.statusL==='PU') return '🔶';
+  return '✅';
+}
+
+function gerarPDF(){
+  if(!document.getElementById('screen-finalizacao').classList.contains('active')){ finalizarObra(); return; }
+  setTimeout(()=>{ window.print(); },300);
+  showToast('Abrindo diálogo de impressão/PDF...','info');
+}
+</script>
+<script>
+function nomeArquivoJSON(data){
+  const limpa=s=>String(s||'').trim().replace(/\s+/g,'_').replace(/[\/\\:*?"<>|]/g,'-');
+  const partes=['MEDICAO',limpa(data.proposta),limpa(data.cliente),limpa(data.cidade)].filter(Boolean);
+  return partes.join('_')+'.json';
+}
+function gerarJSON(){ const data=montarJSONFinal(); const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=nomeArquivoJSON(data); a.click(); URL.revokeObjectURL(url); showToast('JSON exportado!','ok'); }
+
+function extrairLinhaDoTexto(txt){
+  const t=(txt||'').toUpperCase();
+  if(t.includes('LINHA GOLD')||t.includes('GOLD'))      return 'GOLD';
+  if(t.includes('LINHA SUPREMA')||t.includes('SUPREMA')) return 'SUPREMA';
+  if(t.includes('LINHA SLIM')||t.includes('SLIM'))       return 'SLIM';
+  if(t.includes('LINHA MOVE')||t.includes('MOVE'))       return 'MOVE';
+  if(t.includes('LINHA BRONZE')||t.includes('BRONZE'))   return 'BRONZE';
+  if(t.includes('TEMPERADO')||t.includes('FIXO'))        return 'TEMPERADO';
+  return '';
+}
+function extrairVidrosDoTexto(txt){
+  const t=(txt||'').toUpperCase();
+  if(t.includes('JATEADO'))    return 'Jateado';
+  if(t.includes('LAMINADO'))   return 'Laminado';
+  if(t.includes('FUMÊ')||t.includes('FUME')) return 'Fumê';
+  if(t.includes('TEMPERADO'))  return 'Temperado';
+  if(t.includes('SEM VIDRO'))  return 'Sem Vidros';
+  return 'Sem Vidros';
+}
+function menorMedidaObj(obj,prefixo){
+  if(!obj) return null;
+  const vs=Object.entries(obj).filter(([k])=>k.startsWith(prefixo)).map(([,v])=>parseInt(v)).filter(v=>!isNaN(v));
+  return vs.length?Math.min(...vs):null;
+}
+function montarJSONFinal(){
+  return{
+    // ── Identificação da obra ────────────────────────────────
+    proposta:    APP.obra?.proposta    || '',
+    cliente:     APP.obra?.cliente     || '',
+    cidade:      APP.obra?.cidade      || '',
+    cor:         APP.obra?.cor         || '',
+    medidor:     APP.obra?.medidor     || '',
+    dataMedicao: APP.obra?.dataMedicao || '',
+    // Dados do orçamento (vindos do XLS SmartCEM)
+    emitidoPor:  APP.obra?.emitido     || '',
+    valorTotal:  APP.obra?.total       || '',
+    validade:    APP.obra?.validade    || '',
+    obsOrcamento:APP.obra?.obs         || '',
+    // Observação geral da obra (digitada pelo medidor)
+    obsGeralObra:APP.obra?.obsGeralObra|| '',
+    // Metadados
+    finalizada:  APP.finalizada,
+    versao:      APP.version,
+    exportadoEm: new Date().toISOString(),
+
+    // ── Esquadrias ───────────────────────────────────────────
+    esquadrias: APP.esquadrias.map(esq=>{
+      // Linha: usa campo direto ou extrai da descricao automaticamente
+      const linha     = esq.linha    || extrairLinhaDoTexto(esq.descricao) || extrairLinhaDoTexto(esq.linhaCom||'');
+      // Vidros: usa campo direto ou extrai da descricao
+      const vidros    = esq.vidros   || extrairVidrosDoTexto(esq.descricao);
+      // Acabamento: usa campo direto ou herda da obra
+      const acabamento= esq.acabamento || APP.obra?.cor || '';
+      // Medidas: em sessão ativa ficam em esq.contramarco; importadas do JSON ficam em esq.medidas.contramarco
+      const cm        = esq.contramarco || esq.medidas?.contramarco || {};
+      const rb_src    = esq.reboco      || esq.medidas?.reboco      || {};
+      // Complementos: em sessão = esq.complementos; importado = esq.camposComplementares
+      const comp_src  = esq.complementos || esq.camposComplementares || {};
+      const menorL    = esq.menorLarguraObra || menorMedidaObj(cm,'L');
+      const menorH    = esq.menorAlturaObra  || menorMedidaObj(cm,'H');
+      // Quantidade (itens múltiplos)
+      const qtd       = esq.qtd || esq.qtdTotal || 1;
+
+      return {
+        // Identificação
+        codigo:           esq.codigo,
+        descricao:        esq.descricao,
+        tipoClassificado: esq.tipoClassificado || classificarEsquadria(esq.descricao),
+        localizacao:      esq.localizacao,
+        linha,
+        vidros,
+        acabamento,
+        // Dimensões do projeto
+        larguraProjeto:   esq.largura  || esq.larguraProjeto  || 0,
+        alturaProjeto:    esq.altura   || esq.alturaProjeto   || 0,
+        // Menores medidas aferidas em obra
+        menorLarguraObra: menorL,
+        menorAlturaObra:  menorH,
+        // Quantidade e valores (do orçamento)
+        qtd,
+        qtdTotal:         esq.qtdTotal  || qtd,
+        qtdIndice:        esq.qtdIndice || 1,
+        valorUnitario:    esq.valorUnitario || esq.valorUn   || '',
+        valorTotalItem:   esq.valorTotalItem || esq.valorTotal|| '',
+        // Flag motor elétrico
+        temMotor:         esq.motor     || false,
+        // Responsável pela medição desta esquadria
+        responsavel:      esq.responsavel || APP.obra?.medidor || '',
+        // Status
+        status:           esq.status,
+        // Multi-lados (FIXO em L, guarda-corpo etc.)
+        ...(esq.multiLados ? {
+          multiLados:   true,
+          numLados:     esq.numLados,
+          ladosMedicao: esq.ladosMedicao
+        } : {}),
+        // Medidas aferidas (6 pontos cada)
+        medidas:{
+          contramarco: cm,
+          reboco:      rb_src
+        },
+        // Instalação e campos complementares
+        instalacao:            comp_src.instalacao || esq.instalacao || '',
+        camposComplementares:  comp_src,
+        // Observações
+        observacaoGeral:       esq.observacaoGeral       || '',
+        observacoesProjetista: esq.observacoesProjetista || [],
+        // Mídia
+        croqui:     esq.croquiData || null,
+        fotos:      esq.fotos      || [],
+        validacao:  esq.validacao  || null
+      };
+    })
+  };
+}
+
+function exportarBackupJSON(){
+  if(!APP.obra) return;
+  const data=montarJSONFinal();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`backup_${data.proposta||'obra'}_${(data.cliente||'').replace(/\s+/g,'_')}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup salvo!','ok');
+}
+
+function verificarDivergenciaProjeto(esq,campo,valor){
+  let projetado=0;
+  if(campo.startsWith('H')) projetado=esq.altura;
+  if(campo.startsWith('L')) projetado=esq.largura;
+  if(!projetado||!valor) return '';
+  const diff=Math.abs(parseInt(valor)-projetado);
+  if(diff>50) return `<div style="background:#FEF3C7;border-left:3px solid #F59E0B;border-radius:0 7px 7px 0;padding:9px 12px;margin-top:10px;font-size:0.72rem;font-weight:600;color:#78350f;display:flex;gap:7px">⚠️ Divergência de <strong>${diff}mm</strong> em relação ao projeto (projetado: ${projetado}mm · medido: ${valor}mm). Confirmar medição!</div>`;
+  return '';
+}
+
+/* ENTER avança step */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  const activeScreen=document.querySelector('.screen.active');
+  if(!activeScreen||activeScreen.id!=='screen-wizard') return;
+  const step=WIZ.steps[WIZ.etapa];
+  if(step&&(step.tipo==='numero'||step.tipo==='localizacao')) wizProximo();
+});
+
+/* Auto-save 30s */
+setInterval(()=>{ if(APP.obra&&APP.esquadrias.length){ try{ localStorage.setItem('maxibell_autosave',JSON.stringify(montarJSONFinal())); }catch(e){} } },30000);
+
+/* Recuperar autosave */
+(function verificarAutosave(){
+  try{
+    const saved=localStorage.getItem('maxibell_autosave');
+    if(!saved) return;
+    const data=JSON.parse(saved);
+    if(!data.proposta||data.finalizada) return;
+    setTimeout(()=>{
+      const c=document.getElementById('toastContainer');
+      const t=document.createElement('div');
+      t.className='toast info'; t.style.cursor='pointer';
+      t.innerHTML='<span>💾</span><span>Sessão anterior encontrada. <u>Clique para recuperar</u></span>';
+      t.onclick=()=>{ APP.obra=data; APP.esquadrias=data.esquadrias||[]; renderResumo(APP.obra); showScreen('screen-resumo'); document.getElementById('nomeMedidor').value=data.medidor||''; t.remove(); showToast('Sessão recuperada!','ok'); };
+      c.appendChild(t);
+      setTimeout(()=>t.remove(),8000);
+    },1500);
+  }catch(e){}
+})();
+
+/* Máscara campo numérico */
+document.addEventListener('input',e=>{
+  if(e.target.id!=='inputNumBig') return;
+
+  /* Remove zeros à esquerda */
+  let v=e.target.value.replace(/^0+(\d)/,'$1');
+  if(v!==e.target.value) e.target.value=v;
+
+  const step=WIZ.steps[WIZ.etapa];
+  if(!step) return;
+
+  /* Validação especial apenas para espessura */
+  if(step.id==='espessura'){
+    const val=parseInt(e.target.value)||0;
+    const esq=APP.esquadrias[WIZ.idx];
+    const box=document.getElementById('alertaDivergencia');
+    if(!box) return;
+    const tipo=esq.tipoClassificado||classificarEsquadria(esq.descricao);
+    const campoEsp=getComplementos(tipo,esq.descricao||'').find(c=>c.id==='espessura');
+    const minMatriz=campoEsp?.minimoObrigatorio||null;
+    const msgMatriz=campoEsp?.alertaTexto||null;
+    const minFisico=espessuraMinima(esq);
+    const minEfetivo=minMatriz!==null?Math.max(minMatriz,minFisico):minFisico;
+    if(val>0&&val<minEfetivo){
+      const msgExtra=msgMatriz
+        ?`<br><span style="font-size:0.65rem">${msgMatriz}</span>`
+        :(minEfetivo===200
+          ?'<br><span style="font-size:0.65rem">Porta de Correr ≥4 folhas Gold exige ≥200mm</span>'
+          :'');
+      box.innerHTML=`<div style="background:#FEE2E2;border-left:3px solid #DC2626;border-radius:0 8px 8px 0;padding:10px 13px;margin-top:10px;font-size:0.75rem;font-weight:600;color:#991B1B;display:flex;align-items:flex-start;gap:7px"><span>🚫</span><div><strong>Espessura insuficiente!</strong><br>Mínimo: <strong>${minEfetivo}mm</strong> · Informado: <strong>${val}mm</strong>${msgExtra}</div></div>`;
+    } else {
+      box.innerHTML='';
+    }
+    return; /* ← impede processamento adicional */
+  }
+  /* Demais campos numéricos: divergência já tratada por onNumericInput() no oninput do HTML */
+});
+
+/* ── BOTÃO FLUTUANTE OBSERVAÇÃO RÁPIDA ────────────── */
+function atualizarBtnObsRapida(){
+  // mostrar botão obs obra também
+  const btnObra=document.getElementById('btnObsObra');
+  if(btnObra) btnObra.classList.toggle('visible', screen!=='screen-login'&&screen!=='screen-loading');
+  const btn=document.getElementById('btnObsRapida');
+  if(!btn) return;
+  const wizAtivo=document.getElementById('screen-wizard')?.classList.contains('active');
+  btn.classList.toggle('visible',!!wizAtivo);
+}
+
+const _showScreenOriginal=showScreen;
+showScreen=function(id){
+  _showScreenOriginal(id);
+  atualizarBtnObsRapida();
+  setTimeout(atualizarSideNav,50);
+};
+
+function abrirObsRapida(){
+  const esq=APP.esquadrias[WIZ.idx];
+  if(!esq) return;
+  const descEl=document.getElementById('obsRapidaDesc');
+  if(descEl) descEl.textContent=`${esq.codigo} · ${esq.tipoClassificado||''} · ${WIZ.tempData.localizacao||'sem localização'}`;
+  const textarea=document.getElementById('inputObsRapida');
+  if(textarea) textarea.value=WIZ.tempData.observacaoGeral||'';
+  document.getElementById('modalObsRapida').classList.add('active');
+  setTimeout(()=>{ if(textarea) textarea.focus(); },200);
+}
+
+function salvarObsRapida(){
+  const textarea=document.getElementById('inputObsRapida');
+  if(!textarea) return;
+  WIZ.tempData.observacaoGeral=textarea.value;
+  autoSalvar();
+  fecharModal('modalObsRapida');
+  showToast('✅ Observação salva!','ok',2000);
+  const campoAtivo=document.getElementById('inputObsGeral');
+  if(campoAtivo) campoAtivo.value=textarea.value;
+}
+
+/* ── OBSERVAÇÃO GERAL DA OBRA ─────────────────────────── */
+function abrirObsObra(){
+  const textarea=document.getElementById('inputObsObra');
+  if(textarea) textarea.value=APP.obra?.obsGeralObra||'';
+  document.getElementById('modalObsObra').classList.add('active');
+  setTimeout(()=>{ if(textarea) textarea.focus(); },200);
+}
+function salvarObsObra(){
+  const textarea=document.getElementById('inputObsObra');
+  if(!textarea) return;
+  if(!APP.obra) APP.obra={};
+  APP.obra.obsGeralObra=textarea.value;
+  fecharModal('modalObsObra');
+  showToast('📋 Obs. da obra salva!','ok',2000);
+  // Atualizar badge visual se tiver conteúdo
+  const btn=document.getElementById('btnObsObra');
+  if(btn) btn.style.background=textarea.value?'linear-gradient(135deg,#16A34A,#15803D)':'linear-gradient(135deg,#EA580C,#C2410C)';
+}
+document.getElementById('modalObsObra')?.addEventListener('click',function(e){ if(e.target===this) fecharModal('modalObsObra'); });
+
+/* ── QUADRO FIXO EM L — lógica dos lados ─────────────── */
+// Chamada após o usuário responder fixoEmL='Sim' no wizard
+function wizFixoEmLAtivo(){
+  const esq=APP.esquadrias[WIZ.idx];
+  if(!esq) return false;
+  return (WIZ.tempData.complementos?.fixoEmL||'').toUpperCase()==='SIM';
+}
+// Renderiza campos de largura por lado do L (dentro do step wizard)
+function renderStepFixoEmL(){
+  const lados=WIZ.tempData.ladosFixo||[{largura:''},{largura:''}];
+  const alturaProjeto=APP.esquadrias[WIZ.idx]?.altura||0;
+  return `<div style="margin-top:12px">
+    <div style="font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:10px">Informe a largura de cada lado do L — a altura é a mesma para ambos (${alturaProjeto}mm)</div>
+    ${lados.map((l,i)=>`
+      <div style="margin-bottom:12px">
+        <label class="input-label">Lado ${i+1} — Largura (mm)</label>
+        <input type="number" inputmode="numeric" class="input-blue"
+          value="${l.largura||''}"
+          placeholder="Ex: 1200"
+          oninput="atualizarLadoFixoL(${i},this.value)"
+          style="font-size:1.1rem;font-weight:700;text-align:center">
+      </div>`).join('')}
+    <button class="btn btn-outline" style="width:100%;margin-top:4px" onclick="adicionarLadoFixoL()">+ Adicionar lado</button>
+  </div>`;
+}
+function atualizarLadoFixoL(idx,val){
+  if(!WIZ.tempData.ladosFixo) WIZ.tempData.ladosFixo=[{largura:''},{largura:''}];
+  WIZ.tempData.ladosFixo[idx]={largura:parseInt(val)||''};
+}
+function adicionarLadoFixoL(){
+  if(!WIZ.tempData.ladosFixo) WIZ.tempData.ladosFixo=[{largura:''},{largura:''}];
+  WIZ.tempData.ladosFixo.push({largura:''});
+  // Re-render step atual
+  const cont=document.getElementById('wizStepContent');
+  if(cont){
+    const extra=cont.querySelector('.fixo-l-extra');
+    if(extra) extra.innerHTML=renderStepFixoEmL();
+  }
+}
+
+document.getElementById('modalObsRapida')?.addEventListener('click',function(e){ if(e.target===this) fecharModal('modalObsRapida'); });
+
+/* ── PAINEL LATERAL ─────────────────────────────────── */
+function renderSideNav(){
+  const list=document.getElementById('sideNavList');
+  if(!list||!APP.esquadrias?.length) return;
+
+  // Atualiza progresso
+  const total=APP.esquadrias.length;
+  const concluidas=APP.esquadrias.filter(e=>e.status==='concluida').length;
+  const pct=total>0?Math.round((concluidas/total)*100):0;
+  const nomeEl=document.getElementById('sideObraNome');
+  const progTxt=document.getElementById('sideObraProgressoTxt');
+  const fill=document.getElementById('sideProgressFill');
+  if(nomeEl) nomeEl.textContent=APP.obra?.proposta||'Obra';
+  if(progTxt) progTxt.textContent=`${concluidas} / ${total} concluídas · ${pct}%`;
+  if(fill) fill.style.width=pct+'%';
+
+  const query=(document.getElementById('sideSearchInput')?.value||'').toLowerCase();
+  list.innerHTML='';
+  APP.esquadrias.forEach((esq,idx)=>{
+    const tipo=esq.tipoClassificado||classificarEsquadria(esq.descricao);
+    const loc=esq.localizacao||'';
+    const haystack=`${esq.codigo} ${loc} ${tipo} ${esq.descricao}`.toLowerCase();
+    if(query&&!haystack.includes(query)) return;
+    const statusIcon={pendente:'⏳',andamento:'🔵',concluida:'✅'}[esq.status]||'⏳';
+    const isAtivo=WIZ.idx===idx&&document.getElementById('screen-wizard')?.classList.contains('active');
+    const item=document.createElement('div');
+    item.className=`side-esq-item ${isAtivo?'ativo':''}`;
+    item.dataset.idx=idx;
+    item.innerHTML=`
+      <div class="side-esq-status">${statusIcon}</div>
+      <div class="side-esq-codigo">${esq.codigo}</div>
+      <div class="side-esq-tipo">${tipo}</div>
+      ${loc?`<div class="side-esq-loc">📍 ${loc}</div>`:''}
+      ${esq.descricao?`<div class="side-tooltip"><strong style="font-size:0.6rem;opacity:0.65">Descrição</strong><br>${esq.descricao}${esq.vidros?`<br><span style="opacity:0.75">🔲 ${esq.vidros}</span>`:''}${esq.qtdTotal>1?`<br><span style="opacity:0.6">Unidade ${esq.qtdIndice}/${esq.qtdTotal}</span>`:''}</div>`:''}`;
+    item.addEventListener('click',()=>navegarParaEsq(idx));
+    list.appendChild(item);
+  });
+}
+
+function filtrarSideNav(){ renderSideNav(); }
+
+function navegarParaEsq(idx){
+  const wizAtivo=document.getElementById('screen-wizard')?.classList.contains('active');
+  if(wizAtivo&&WIZ.idx>=0){ coletarStepAtual(); autoSalvar(); }
+  const nav=document.getElementById('sideNav');
+  if(nav) nav.classList.remove('mobile-open');
+  abrirWizard(idx);
+  setTimeout(renderSideNav,100);
+}
+
+function atualizarSideNav(){
+  const nav=document.getElementById('sideNav');
+  const toggle=document.getElementById('btnSideNavToggle');
+  if(!nav) return;
+  const activeId=document.querySelector('.screen.active')?.id||'';
+  const mostrar=activeId==='screen-wizard'&&APP.esquadrias?.length>0;
+  if(mostrar){ document.body.classList.add('side-open'); renderSideNav(); }
+  else{ document.body.classList.remove('side-open'); nav.classList.remove('visible','mobile-open'); }
+  if(toggle) toggle.style.display=(activeId==='screen-wizard'&&APP.esquadrias?.length>0)?'block':'none';
+  if(activeId!=='screen-wizard'){ if(nav) nav.classList.remove('visible','mobile-open'); document.body.classList.remove('side-open'); }
+}
+
+function toggleSideNavMobile(){
+  const nav=document.getElementById('sideNav');
+  if(!nav) return;
+  nav.classList.toggle('mobile-open');
+}
+
+console.log('%c🪟 MAXIBELL Sistema de Medição v2.0 — Premium UI','color:#0D6EFD;font-weight:700;font-size:13px');
+/* ── Scroll automático ao focar inputs no tablet ── */
+(function initScrollToInput(){
+  const scrollDelay=350; /* aguarda teclado abrir */
+
+  function scrollParaInput(el){
+    if(!el) return;
+    setTimeout(()=>{
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+    },scrollDelay);
+  }
+
+  /* Observa foco em inputs dentro do wizard */
+  document.addEventListener('focusin',e=>{
+    const wizAtivo=document.getElementById('screen-wizard')
+      ?.classList.contains('active');
+    if(!wizAtivo) return;
+
+    const tag=e.target.tagName;
+    if(['INPUT','TEXTAREA','SELECT'].includes(tag)){
+      scrollParaInput(e.target);
+    }
+  });
+
+  /* iOS: redimensiona ao abrir/fechar teclado virtual */
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>{
+      const focused=document.activeElement;
+      if(focused&&['INPUT','TEXTAREA'].includes(focused.tagName)){
+        scrollParaInput(focused);
+      }
+    });
+  }
+})();
+/* ── Confirmação antes de fechar/recarregar a aba ── */
+(function initBeforeUnload(){
+
+  function temDadosNaoSalvos(){
+    /* Considera dados não salvos se há obra em andamento e não finalizada */
+    if(!APP.obra||APP.finalizada) return false;
+    if(!APP.esquadrias?.length) return false;
+    /* Verifica se há alguma esquadria pendente ou em andamento */
+    return APP.esquadrias.some(e=>e.status!=='concluida');
+  }
+
+  window.addEventListener('beforeunload',e=>{
+    if(!temDadosNaoSalvos()) return;
+
+    /* Força auto-save antes de sair */
+    try{
+      if(APP.obra){
+        localStorage.setItem('maxibell_autosave',
+          JSON.stringify(montarJSONFinal()));
+      }
+    }catch(err){}
+
+    /* Mensagem padrão do navegador (texto customizado ignorado em navegadores modernos) */
+    const msg='Você tem medições não salvas. Deseja sair mesmo assim?\n\nUm backup automático foi salvo localmente.';
+    e.preventDefault();
+    e.returnValue=msg;
+    return msg;
+  });
+
+  /* Intercepta navegação interna: botão "Nova Obra" e "Reimportar" */
+  const _voltarImport=voltarImport;
+  voltarImport=function(){
+    if(APP.esquadrias?.some(e=>e.status!=='concluida')){
+      if(!confirm('⚠️ Reimportar irá descartar a obra atual.\n\nDeseja continuar? (O backup local será mantido)')){
+        return;
+      }
+    }
+    _voltarImport();
+  };
+
+})();
+
+</script>
+
+<script>
+/* ══════════════════════════════════════════
+   SERVICE WORKER
+══════════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      console.log('SW registrado:', reg.scope);
+    }).catch(function(err){
+      console.warn('SW falhou:', err);
+    });
+  });
+}
+
+/* ══════════════════════════════════════════
+   INSTALAÇÃO PWA
+══════════════════════════════════════════ */
+var deferredPrompt=null;
+
+function mostrarBotoesInstalar(){
+  var banner=document.getElementById('installBanner');
+  var box=document.getElementById('installBox');
+  if(banner) banner.style.display='block';
+  if(box) box.style.display='block';
+}
+
+function esconderBotoesInstalar(){
+  var banner=document.getElementById('installBanner');
+  var box=document.getElementById('installBox');
+  if(banner) banner.style.display='none';
+  if(box) box.style.display='none';
+}
+
+if(window.matchMedia('(display-mode:standalone)').matches || window.navigator.standalone){
+  // Já instalado
+} else {
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+    mostrarBotoesInstalar();
+  });
+  setTimeout(function(){
+    if(!deferredPrompt) mostrarBotoesInstalar();
+  },2000);
+}
+
+function instalarApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(result){
+      if(result.outcome==='accepted') esconderBotoesInstalar();
+      deferredPrompt=null;
+    });
+    return;
+  }
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isIOS){
+    mostrarInstrucoesVisuais(
+      '📱 Instalação no iPad/iPhone',
+      '<div style="text-align:left;font-size:0.82rem;line-height:2">'
+      +'<strong>1.</strong> Toque no ícone <span style="font-size:1.1rem">⬆️</span> (compartilhar) na barra do Safari<br>'
+      +'<strong>2.</strong> Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong><br>'
+      +'<strong>3.</strong> Toque em <strong>"Adicionar"</strong> no canto superior direito<br><br>'
+      +'<span style="font-size:0.75rem;color:#666">O ícone amarelo MEDIÇÃO FINAL aparecerá na sua tela inicial.</span>'
+      +'</div>'
+    );
+    return;
+  }
+  mostrarInstrucoesVisuais(
+    '📲 Instalação no Tablet',
+    '<div style="text-align:left;font-size:0.82rem;line-height:2">'
+    +'<strong>1.</strong> Toque nos <strong>3 pontinhos</strong> ( ⋮ ) no canto superior direito do Chrome<br>'
+    +'<strong>2.</strong> Toque em <strong>"Adicionar à tela inicial"</strong><br>'
+    +'<strong>3.</strong> Confirme tocando em <strong>"Adicionar"</strong><br><br>'
+    +'<span style="font-size:0.75rem;color:#666">O ícone amarelo MEDIÇÃO FINAL aparecerá na sua tela inicial.</span>'
+    +'</div>'
+  );
+}
+
+function mostrarInstrucoesVisuais(titulo,corpo){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  overlay.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25)">'
+    +'<div style="text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:2rem;margin-bottom:8px">📲</div>'
+    +'<div style="font-size:1rem;font-weight:800;color:#1A3A5C">'+titulo+'</div>'
+    +'</div>'
+    +corpo
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;margin-top:16px;padding:12px;background:#1A3A5C;color:#fff;border:none;border-radius:10px;font-family:Montserrat,sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">Entendi</button>'
+    +'</div>';
+  document.body.appendChild(overlay);
+}
+
+window.addEventListener('appinstalled',function(){
+  esconderBotoesInstalar();
+});
+</script>
+</body>
+</html>
+
+
+
+
